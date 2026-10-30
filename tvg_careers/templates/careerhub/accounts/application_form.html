@@ -1,0 +1,17 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section portal-section"><div class="shell reading-width">
+  <a class="back-link" href="{{ job.url_path }}">← Back to opportunity</a>
+  <p class="eyebrow">{{ job.venture.name }} · APPLICATION</p><h1>{{ job.title }}</h1>
+  {% include 'careerhub/accounts/partials/portal_nav.html' %}
+  {% if submit_error %}<div class="form-errors" role="alert">{{ submit_error }}</div>{% endif %}
+  <form class="application-form" method="post" novalidate>{% csrf_token %}
+    {{ form.non_field_errors }}
+    <section class="portal-panel"><p class="eyebrow">PROFILE SNAPSHOT</p><h2>Your reusable details</h2><dl class="review-list"><div><dt>Name</dt><dd>{{ request.user.get_full_name }}</dd></div><div><dt>Email</dt><dd>{{ request.user.email }}</dd></div><div><dt>University</dt><dd>{{ profile.university|default:"Not provided" }}</dd></div><div><dt>Programme</dt><dd>{{ profile.degree_programme|default:"Not provided" }}</dd></div><div><dt>Availability</dt><dd>{{ profile.preferred_start_date|default:"Not provided" }}{% if profile.preferred_end_date %} – {{ profile.preferred_end_date }}{% endif %}</dd></div></dl><a class="text-link" href="{% url 'careerhub:candidate-profile' %}">Update reusable profile</a><p class="field-help">Submitting copies these values. Later profile changes will not alter this application.</p></section>
+    <section class="portal-panel"><p class="eyebrow">DOCUMENT SNAPSHOT</p><h2>Documents for this application</h2>{% if documents.cv %}<p><strong>CV:</strong> {{ documents.cv.original_name }}</p>{% else %}<div class="form-errors">A current CV is required.</div>{% endif %}{% if documents.cover_letter %}<p><strong>Cover letter:</strong> {{ documents.cover_letter.original_name }}</p>{% else %}<p>Cover letter: not provided</p>{% endif %}<a class="text-link" href="{% url 'careerhub:candidate-documents' %}">Manage reusable documents</a><p class="field-help">Independent copies are retained with this submission.</p></section>
+    {% if job.questionnaire %}<section class="portal-panel"><p class="eyebrow">ROLE QUESTIONS</p><h2>Questionnaire</h2>{% for field in form %}{% if field.name != 'confirmation' %}<div class="field{% if field.field.widget.input_type == 'checkbox' %} choice-field{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}</section>{% endif %}
+    <section class="portal-panel"><p class="eyebrow">SUBMIT</p><h2>Confirm your application</h2><div class="choice-field">{{ form.confirmation }}<label for="{{ form.confirmation.id_for_label }}">{{ form.confirmation.label }}</label>{{ form.confirmation.errors }}</div><p class="field-help">Only candidate-safe status information is shown here. Internal reviewer comments, ratings and other applicants are never included.</p><button class="button button-primary" type="submit" {% if not documents.cv %}aria-describedby="cv-required"{% endif %}>Submit application</button></section>
+  </form>
+</div></section>
+{% endblock %}

@@ -1,0 +1,23 @@
+<article class="job-card" data-venture="{{ job.venture.slug }}">
+  <div class="job-card-topline">
+    <span class="venture-label">{{ job.venture.name }}</span>
+    <span class="status status-{{ job.application_status }}">
+      {% if job.application_status == 'open' %}Open now{% elif job.application_status == 'upcoming' %}Opening soon{% else %}Applications closed{% endif %}
+    </span>
+  </div>
+  <h3><a href="{{ job.url_path }}">{{ job.title }}</a></h3>
+  <p class="job-summary">{{ job.role_description|truncatewords:27 }}</p>
+  <ul class="job-meta" aria-label="Role details">
+    <li>{{ job.category_label }}</li>
+    <li>{{ job.department }}</li>
+    <li>{{ job.location }}</li>
+    <li>{{ job.work_mode_label }}</li>
+    {% if job.erasmus_plus %}<li>Erasmus+ eligible</li>{% endif %}
+  </ul>
+  <div class="job-card-footer">
+    <span>
+      {% if job.application_closing_date %}Apply by {{ job.application_closing_date }}{% else %}Rolling applications{% endif %}
+    </span>
+    <a class="text-link" href="{{ job.url_path }}" aria-label="View {{ job.title }}">View role <span aria-hidden="true">→</span></a>
+  </div>
+</article>

@@ -1,0 +1,74 @@
+{
+  "run_at_utc": "2026-10-30T10:38:17.286577+00:00",
+  "scope": "local image metadata and a read-only, network-disabled Python probe; entrypoint and application services were not started",
+  "requested_image": "tvg-peopleops-readiness:2026-10-30",
+  "image_id": "sha256:0026b92a5d6bfacabebdada31cb48dcd4612d0a32ddad1e06c490bccae699cc3",
+  "probe": {
+    "python": "3.12.16",
+    "django": "5.2.18",
+    "djangorestframework": "3.18.3",
+    "msgpack": "1.2.4",
+    "urllib3": "2.8.0",
+    "uid": 1000,
+    "required_files": true,
+    "local_settings_absent": true,
+    "environment_files_absent": true,
+    "bundled_private_data_absent": true,
+    "runtime_package_managers_absent": true
+  },
+  "checks": [
+    {
+      "check": "immutable-image-id-resolved",
+      "passed": true
+    },
+    {
+      "check": "configured-non-root-user",
+      "passed": true
+    },
+    {
+      "check": "runtime-python-3.12",
+      "passed": true
+    },
+    {
+      "check": "patched-django-minimum",
+      "passed": true
+    },
+    {
+      "check": "reviewed-drf-version",
+      "passed": true
+    },
+    {
+      "check": "patched-msgpack-minimum",
+      "passed": true
+    },
+    {
+      "check": "patched-urllib3-minimum",
+      "passed": true
+    },
+    {
+      "check": "runtime-uid-is-non-root",
+      "passed": true
+    },
+    {
+      "check": "required-release-files-shipped",
+      "passed": true
+    },
+    {
+      "check": "local-settings-excluded",
+      "passed": true
+    },
+    {
+      "check": "environment-files-excluded",
+      "passed": true
+    },
+    {
+      "check": "private-media-not-bundled",
+      "passed": true
+    },
+    {
+      "check": "runtime-package-managers-absent",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

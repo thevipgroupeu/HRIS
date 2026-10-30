@@ -1,0 +1,12 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section portal-section"><div class="shell">
+  <p class="eyebrow">CANDIDATE DASHBOARD</p><h1>My Documents</h1>
+  {% include 'careerhub/accounts/partials/portal_nav.html' %}
+  <div class="portal-grid">
+    <section class="portal-panel"><p class="eyebrow">CURRENT VERSIONS</p><h2>Reusable documents</h2><div class="compact-list">{% for document in documents %}<article><strong>{{ document.get_kind_display }}</strong><span>{{ document.original_name }} · {{ document.uploaded_at|date:"d M Y, H:i" }}</span><a class="text-link" href="{% url 'careerhub:candidate-document-download' document.pk %}">Download</a></article>{% empty %}<p>No reusable documents uploaded.</p>{% endfor %}</div><p class="field-help">Replacing a reusable document never changes files already submitted with an application.</p></section>
+    <section class="portal-panel"><p class="eyebrow">UPLOAD OR REPLACE</p><h2>Private PDF or DOCX</h2>{% if saved %}<div class="status-panel status-panel-success" role="status"><strong>Document saved</strong></div>{% endif %}<form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endfor %}<button class="button button-primary" type="submit">Save document</button></form></section>
+  </div>
+</div></section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}My personal profile{% endblock %}
+{% block content %}
+<div class="card" style="max-width:720px">
+  <h1>My personal profile</h1>
+  <p class="muted">This private information is visible only in your own account and is never included in the company directory.</p>
+  <p><strong>Name:</strong> {{ profile.name }}</p>
+  <p><strong>Personal email:</strong> {{ profile.personal_email }}</p>
+  <p><strong>Phone:</strong> {{ profile.phone }}</p>
+  <p><strong>Address:</strong> {{ profile.address }}</p>
+  <p><strong>City/region:</strong> {{ profile.city }}{% if profile.state %}, {{ profile.state }}{% endif %}</p>
+  <p><strong>Country:</strong> {{ profile.country }}</p>
+  <p><strong>Postal code:</strong> {{ profile.postal_code }}</p>
+</div>
+{% endblock %}

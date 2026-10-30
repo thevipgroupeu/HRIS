@@ -1,0 +1,26 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Internship reporting{% endblock %}
+{% block content %}
+<h1>Internship reporting</h1>
+<p>Draft, submit, and retain the history of your weekly reports and monthly presentations.</p>
+<div class="grid">
+  <section class="card">
+    <h2>Weekly reports</h2>
+    <p><a class="button" href="{% url 'reporting:weekly-new' %}">New weekly report</a></p>
+    <ul>
+      {% for report in weekly_reports %}
+        <li><a href="{% url 'reporting:weekly-detail' report.public_id %}">Week of {{ report.reporting_week }}</a> — {{ report.assigned_project.title }} — {{ report.get_status_display }} (v{{ report.current_version }})</li>
+      {% empty %}<li>No weekly reports yet.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="card">
+    <h2>Monthly presentations</h2>
+    <p><a class="button" href="{% url 'reporting:presentation-new' %}">New monthly presentation</a></p>
+    <ul>
+      {% for presentation in presentations %}
+        <li><a href="{% url 'reporting:presentation-detail' presentation.public_id %}">{{ presentation.presentation_month|date:"F Y" }}</a> — {{ presentation.assigned_project.title }} — {{ presentation.get_status_display }} (v{{ presentation.current_version }})</li>
+      {% empty %}<li>No monthly presentations yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

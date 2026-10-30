@@ -1,0 +1,5 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section"><div class="shell narrow-card"><p class="eyebrow">EMAIL VERIFICATION</p><h1>Confirm this email address.</h1><p>Continue only if you requested a THEVIPGROUP CareerHub account. This confirms email ownership and creates or links a stable PeopleOps identity; it does not submit a job application.</p><form method="post">{% csrf_token %}<button class="button button-primary" type="submit">Verify email</button></form></div></section>
+{% endblock %}

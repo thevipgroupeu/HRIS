@@ -1,0 +1,44 @@
+{
+  "manifest_version": 1,
+  "provider": "activepieces-community-edition",
+  "secrets": {
+    "outbound_verification": "${TVG_OUTBOUND_HMAC_SECRET}",
+    "callback_signing": "${TVG_CALLBACK_HMAC_SECRET}",
+    "zoho_connection": "${TVG_ZOHO_CONNECTION_ID}"
+  },
+  "shared": {
+    "trigger": "signed_webhook",
+    "schema": "eu.thevipgroup.lifecycle-event",
+    "schema_version": 1,
+    "idempotency_header": "Idempotency-Key",
+    "timestamp_header": "X-TVG-Timestamp",
+    "native_hmac_signature_header": "X-TVG-Body-Signature",
+    "native_hmac_algorithm": "sha256",
+    "native_hmac_encoding": "hex",
+    "native_hmac_prefix": "v1=",
+    "timestamp_bound_signature_header": "X-TVG-Signature",
+    "callback_url": "${TVG_HORILLA_CALLBACK_URL}",
+    "callback_allowed_states": ["accepted", "running", "succeeded", "failed", "cancelled"],
+    "sender_allowlist": ["recruitment@thevipgroup.eu"]
+  },
+  "flows": [
+    {
+      "key": "application_acknowledgment",
+      "event_type": "career.application_submitted.v1",
+      "human_approval_required": false,
+      "actions": ["verify_signature", "claim_idempotency_key", "send_approved_message", "post_execution_status"]
+    },
+    {
+      "key": "shortlisted_verification_request",
+      "event_type": "erasmus.verification_requested.v1",
+      "human_approval_required": true,
+      "actions": ["verify_signature", "require_horilla_approval", "claim_idempotency_key", "send_approved_message", "post_execution_status"]
+    },
+    {
+      "key": "document_reminder",
+      "event_type": "erasmus.document_reminder_requested.v1",
+      "human_approval_required": false,
+      "actions": ["verify_signature", "claim_idempotency_key", "send_approved_message", "post_execution_status"]
+    }
+  ]
+}

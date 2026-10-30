@@ -1,0 +1,36 @@
+{
+  "run_at_utc": "2026-10-30T10:13:06.567138+00:00",
+  "scope": "network-less synthetic upstreams; not live Django/Cloudflare",
+  "image_id": "sha256:785835ea65db4bba6f021acc0f3be91b0fef76a53fe41f8588c6698d2aed0606",
+  "checks": [
+    {
+      "check": "careerhub-route-/candidate/sign-in/",
+      "passed": true
+    },
+    {
+      "check": "careerhub-route-/candidate/create-account/",
+      "passed": true
+    },
+    {
+      "check": "peoplehub-login-route",
+      "passed": true
+    },
+    {
+      "check": "untrusted-listener-ignores-spoofed-headers",
+      "passed": true
+    },
+    {
+      "check": "unknown-host-denied",
+      "passed": true
+    },
+    {
+      "check": "private-bridge-not-public",
+      "passed": true
+    },
+    {
+      "check": "nginx-access-log-omits-token-path-and-referrer",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

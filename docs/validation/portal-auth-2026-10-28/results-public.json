@@ -1,0 +1,17 @@
+{
+  "runtime": "horilla.settings.careerhub",
+  "database": "temporary in-memory SQLite",
+  "email": "local-memory only",
+  "exit_code": 0,
+  "summary": [
+    "Found 40 test(s).",
+    "System check identified no issues (0 silenced).",
+    "Ran 40 tests in 2.401s",
+    "OK"
+  ],
+  "exception_type": null,
+  "python": "3.13.14",
+  "completed_at_utc": "2026-10-28T23:46:14.551171+00:00",
+  "migrations": "enabled",
+  "password_hashing": "test-only MD5; not a production security/capacity check"
+}

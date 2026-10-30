@@ -84,24 +84,33 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# The base image ships its own setuptools (and pip's vendored msgpack) in
-# /usr/local/lib/python3.12/site-packages, outside the /opt/venv this app
-# runs from. Pinning them in requirements.txt only fixes the venv copy, so
-# the image scan kept failing on the system copy: setuptools 70.3.0
-# (CVE-2025-47273, path traversal) and msgpack 1.1.2
-# (GHSA-6v7p-g79w-8964, out-of-bounds read). Nothing in the app imports
-# them from there, but they are in the image, so they are the image's
-# problem.
-# /usr/local/bin/python explicitly: ENV PATH above already points at
-# /opt/venv/bin, which does not exist yet at this layer.
-RUN /usr/local/bin/python -m pip install --no-cache-dir --upgrade \
-        "setuptools>=78.1.1" "msgpack>=1.2.1"
-
 # Create non-root user FIRST
 RUN useradd --create-home --uid 1000 appuser
 
 # Copy virtual environment from builder stage WITH correct ownership
 COPY --from=builder --chown=appuser:appuser /opt/venv /opt/venv
+
+# Package installers and build helpers are not runtime dependencies. Keeping
+# pip/setuptools in either Python environment also keeps pip's vendored copies
+# of libraries in the production attack surface (and in vulnerability scans),
+# even when the application uses patched standalone versions. Remove only these
+# exact package-manager paths after dependency installation. The fixed runtime
+# msgpack/urllib3 packages remain in /opt/venv and are checked below/CI.
+RUN rm -rf \
+        /usr/local/bin/pip \
+        /usr/local/bin/pip3 \
+        /usr/local/bin/pip3.12 \
+        /usr/local/lib/python3.12/site-packages/pip \
+        /usr/local/lib/python3.12/site-packages/pip-*.dist-info \
+        /usr/local/lib/python3.12/site-packages/setuptools \
+        /usr/local/lib/python3.12/site-packages/setuptools-*.dist-info \
+        /opt/venv/bin/pip \
+        /opt/venv/bin/pip3 \
+        /opt/venv/bin/pip3.12 \
+        /opt/venv/lib/python3.12/site-packages/pip \
+        /opt/venv/lib/python3.12/site-packages/pip-*.dist-info \
+        /opt/venv/lib/python3.12/site-packages/setuptools \
+        /opt/venv/lib/python3.12/site-packages/setuptools-*.dist-info
 
 WORKDIR /app
 

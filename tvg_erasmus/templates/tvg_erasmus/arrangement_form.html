@@ -1,0 +1,8 @@
+{% extends 'index.html' %}
+{% block content %}
+<main class="oh-wrapper">
+  <div class="oh-main__topbar"><div class="oh-main__titlebar-title"><h1>{% if case %}Revise{% else %}Create{% endif %} Erasmus arrangements</h1><p>{{ application.candidate.name }} — {{ application.opening.title }}</p></div></div>
+  {% if messages %}{% for message in messages %}<div class="oh-alert oh-alert--{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+  <form method="post" class="oh-card-dashboard oh-card-dashboard--no-scale">{% csrf_token %}{{ form.as_p }}<button class="oh-btn oh-btn--success" type="submit">Save proposal</button> <a class="oh-btn oh-btn--secondary" href="{% url 'tvg_erasmus:arrangement-dashboard' %}">Cancel</a></form>
+</main>
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+  "mode": "public",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "temporary in-memory SQLite",
+  "elapsed_seconds": 11.14,
+  "exit_code": 0,
+  "summary": [
+    "Found 37 test(s).",
+    "System check identified no issues (0 silenced).",
+    "Ran 37 tests in 4.130s",
+    "OK"
+  ],
+  "exception": null
+}

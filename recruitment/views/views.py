@@ -3437,7 +3437,12 @@ def delete_reject_reason(request):
 
 # Loaded once per worker process at import time (spaCy model load is slow;
 # never call spacy.load() inside a request-handling function).
-_resume_nlp = spacy.load("en_core_web_sm")
+try:
+    _resume_nlp = spacy.load("en_core_web_sm")
+except OverflowError:
+    # On Windows with Python 3.13+, spaCy's tokenizer deserializer can trigger an
+    # OverflowError when converting preshed hash keys to signed ssize_t.
+    _resume_nlp = spacy.load("en_core_web_sm", exclude=["tokenizer"])
 
 
 def extract_text_with_font_info(pdf):

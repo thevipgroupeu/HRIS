@@ -1,0 +1,24 @@
+{
+  "run_at_utc": "2026-10-30T10:20:23Z",
+  "scope": "isolated disposable PostgreSQL 16 and authenticated Redis 7 containers; synthetic records, local-memory email, disabled or synthetic external adapters",
+  "image_id": "sha256:03179891d100fbd0459dfe6c9dfdc38b9234ac79b307900235c44c86a80586d7",
+  "postgresql": "16.15",
+  "redis": "7.4.11",
+  "public_runtime": {
+    "tests": 44,
+    "elapsed_seconds": 17.664,
+    "passed": true
+  },
+  "private_runtime": {
+    "tests": 265,
+    "elapsed_seconds": 140.589,
+    "passed": true
+  },
+  "migration_rehearsal": {
+    "private_full_graph_on_fresh_postgresql": true,
+    "note": "The full graph was applied before final test-only response-close adjustments; no model or migration file changed afterward."
+  },
+  "real_mail_sent": false,
+  "external_side_effects": false,
+  "passed": true
+}

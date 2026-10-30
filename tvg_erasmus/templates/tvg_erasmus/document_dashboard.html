@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+{% block content %}
+<main class="oh-wrapper">
+  <h1>Erasmus+ documentation</h1>
+  <p>Every approval, signature and return is a human-controlled, audited action. Template copies are drafts until reviewed, approved and signed.</p>
+  {% for case in cases %}
+    <section class="oh-card-dashboard oh-card-dashboard--no-scale" style="margin-bottom:1rem">
+      <h2>{{ case.application.candidate }} · {{ case.university }}</h2>
+      <p>Acceptance: {{ case.get_acceptance_status_display }} · Before Mobility: {% if case.before_mobility_completed_at %}complete{% else %}incomplete{% endif %}</p>
+      {% if case.accommodation_request.needs_assistance %}<div class="oh-alert oh-alert--info"><strong>Accommodation assistance requested</strong><p>Status: {{ case.accommodation_request.get_status_display }}. No personal housing details are stored here.</p><form method="post" action="{% url 'tvg_erasmus:accommodation-follow-up' case.public_id %}">{% csrf_token %}<select name="status"><option value="contacted">Contacted</option><option value="closed">Closed</option></select><button class="oh-btn oh-btn--secondary" type="submit">Update follow-up</button></form></div>{% endif %}
+      {% if case.acceptance_status == 'received' %}<form method="post" action="{% url 'tvg_erasmus:document-initialize' case.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--success" type="submit">Open or refresh Learning Agreement lifecycle</button></form>{% endif %}
+      {% if case.acceptance_status == 'received' and case.before_mobility_completed_at and not case.intern_onboarding %}
+      <form method="post" action="{% url 'tvg_onboarding:start' case.public_id %}" style="margin-top:.75rem">{% csrf_token %}<button class="oh-btn oh-btn--success" type="submit">Start intern onboarding</button></form>
+      {% elif case.intern_onboarding %}
+      <p><a class="oh-btn oh-btn--secondary" href="{% url 'tvg_onboarding:detail' case.intern_onboarding.public_id %}">Open intern onboarding</a></p>
+      {% endif %}
+      {% for document in case.documents.all %}
+        <article style="border-top:1px solid #ddd;padding-top:1rem;margin-top:1rem">
+          <h3>{{ document.title }} · {{ document.get_status_display }}</h3>
+          <p>{{ document.get_lifecycle_phase_display }} · {% if document.required %}required{% else %}optional{% endif %}</p>
+          {% if document.revision_reason %}<p><strong>Candidate revision:</strong> {{ document.revision_reason }}</p>{% endif %}
+          {% for version in document.versions.all %}<a href="{% url 'tvg_erasmus:document-version-download' version.public_id %}">Download v{{ version.version_number }} ({{ version.get_source_display }})</a>{% empty %}<p>No file version yet.</p>{% endfor %}
+          {% if document.template_id and document.status == 'requested' %}<form method="post" action="{% url 'tvg_erasmus:document-generate' document.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--secondary" type="submit">Copy approved template as draft</button></form>{% endif %}
+          {% if document.status != 'signed' and document.status != 'returned' %}<form method="post" enctype="multipart/form-data" action="{% url 'tvg_erasmus:document-upload' document.public_id %}">{% csrf_token %}<input type="file" name="document" accept=".pdf,.docx" required><button class="oh-btn oh-btn--secondary" type="submit">Upload staff version</button></form>{% endif %}
+          {% if document.status == 'submitted' %}<form method="post" action="{% url 'tvg_erasmus:document-review' document.public_id %}">{% csrf_token %}<select name="action"><option value="review">Mark reviewed</option><option value="revision">Request revision</option></select><textarea name="revision_reason" placeholder="Candidate-facing revision reason"></textarea><button class="oh-btn oh-btn--secondary" type="submit">Record review</button></form>{% endif %}
+          {% if document.status == 'reviewed' %}<form method="post" action="{% url 'tvg_erasmus:document-approve' document.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--success" type="submit">Approve document</button></form>{% endif %}
+          {% if document.status == 'approved' %}
+            <form method="post" action="{% url 'tvg_erasmus:document-signature' document.public_id %}">{% csrf_token %}<select name="signer_role">{% for role in document.required_signer_roles %}<option value="{{ role }}">{{ role }}</option>{% endfor %}</select><button class="oh-btn oh-btn--secondary" type="submit">Record manual signature timestamp</button></form>
+            <form method="post" enctype="multipart/form-data" action="{% url 'tvg_erasmus:document-manual-signed-upload' document.public_id %}">{% csrf_token %}<input type="file" name="document" accept=".pdf,.docx" required>{% for role in document.required_signer_roles %}<label><input type="checkbox" name="signer_roles" value="{{ role }}"> {{ role }}</label>{% endfor %}<button class="oh-btn oh-btn--secondary" type="submit">Upload manually signed copy</button></form>
+            <form method="post" action="{% url 'tvg_erasmus:document-signing-service' document.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--secondary" type="submit">Request configured signing service</button></form>
+          {% endif %}
+          {% if document.status == 'signed' %}<form method="post" action="{% url 'tvg_erasmus:document-return' document.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--success" type="submit">Mark returned to student/university</button></form>{% endif %}
+          {% if document.document_type == 'learning_agreement' and document.status == 'returned' %}<form method="post" action="{% url 'tvg_erasmus:document-amendment' document.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--secondary" type="submit">Open during-mobility amendment</button></form>{% endif %}
+          <details><summary>Audit history</summary><ol>{% for event in document.events.all %}<li>{{ event.occurred_at }} · {{ event.event_type }} · {{ event.get_actor_type_display }}{% if event.from_status or event.to_status %} · {{ event.from_status|default:"—" }} → {{ event.to_status|default:"—" }}{% endif %}</li>{% empty %}<li>No audit events.</li>{% endfor %}</ol></details>
+        </article>
+      {% endfor %}
+    </section>
+  {% empty %}<p>No accessible Erasmus cases.</p>{% endfor %}
+</main>
+{% endblock %}

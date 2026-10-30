@@ -43,6 +43,7 @@ from django.utils._os import safe_join
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html, strip_tags
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_noop
 from django.views import View
@@ -8849,10 +8850,14 @@ def protected_media(request, path):
     # These are assets rendered on genuinely-public pages (login screen,
     # open recruitments, candidate self-tracking) and contain no sensitive
     # employee data. Do NOT add prefixes here without security review.
-    public_media_prefixes = (
-        "base/icon/",
-        "base/company/icon/",
-        "recruitment/candidate/profile/",
+    public_media_prefixes = getattr(
+        settings,
+        "HORILLA_PUBLIC_MEDIA_PREFIXES",
+        (
+            "base/icon/",
+            "base/company/icon/",
+            "recruitment/candidate/profile/",
+        ),
     )
 
     # Prevent path traversal
@@ -8883,6 +8888,12 @@ def protected_media(request, path):
             )
             return redirect("login")
 
+        authorizer = getattr(settings, "HORILLA_PRIVATE_MEDIA_AUTHORIZER", None)
+        if authorizer:
+            user = request.user if request.user.is_authenticated else jwt_user
+            if not import_string(authorizer)(user, path):
+                return HttpResponse("Not found", status=404)
+
     # Determine the content type from the extension and decide whether the
     # browser may render it inline. User-uploaded content that browsers treat
     # as active markup (HTML/SVG/XML/etc.) must never render in this origin --
@@ -8908,6 +8919,9 @@ def protected_media(request, path):
     # Block MIME sniffing -- a browser must honour the declared type and not
     # re-interpret e.g. an octet-stream as HTML.
     response["X-Content-Type-Options"] = "nosniff"
+    if not is_public_asset:
+        response["Cache-Control"] = "private, no-store"
+        response["Vary"] = "Cookie, Authorization"
     if force_download:
         filename = os.path.basename(media_path)
         response["Content-Disposition"] = f'attachment; filename="{filename}"'

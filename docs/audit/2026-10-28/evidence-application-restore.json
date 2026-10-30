@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-28",
+  "postgres": "postgres (PostgreSQL) 16.15",
+  "results": [
+    {
+      "database": "tvg_audit_django",
+      "restored_database": "tvg_audit_django_restored_v2",
+      "table_count": 528,
+      "sequence_count": 520,
+      "table_data_hashes_match": true,
+      "views_match": true,
+      "constraints_match": true,
+      "sequences_match": true,
+      "elapsed_seconds": 19.95
+    },
+    {
+      "database": "tvg_audit_careerhub",
+      "restored_database": "tvg_audit_careerhub_restored_v2",
+      "table_count": 12,
+      "sequence_count": 8,
+      "table_data_hashes_match": true,
+      "views_match": true,
+      "constraints_match": true,
+      "sequences_match": true,
+      "elapsed_seconds": 2.64
+    }
+  ],
+  "scope": "Full migrated schemas with sparse synthetic records, not production volume, upgrades, PITR, encrypted/offsite recovery or cross-service recovery consistency."
+}

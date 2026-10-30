@@ -1,0 +1,10 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Internship reporting status{% endblock %}
+{% block content %}
+<h1>Internship reporting status</h1>
+<div class="grid">
+  <section class="card"><h2>Internships</h2><p>{{ interns }} active intern records</p><p>{{ overdue_weekly }} overdue weekly reports</p></section>
+  <section class="card"><h2>Weekly reports</h2><ul>{% for row in weekly_counts %}<li>{{ row.status }}: {{ row.total }}</li>{% empty %}<li>No reports.</li>{% endfor %}</ul></section>
+  <section class="card"><h2>Monthly presentations</h2><ul>{% for row in monthly_counts %}<li>{{ row.status }}: {{ row.total }}</li>{% empty %}<li>No presentations.</li>{% endfor %}</ul></section>
+</div>
+{% endblock %}

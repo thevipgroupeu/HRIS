@@ -1,0 +1,17 @@
+{
+  "mode": "public_pg_migrations",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "disposable PostgreSQL 16 (tvg_audit_careerhub)",
+  "elapsed_seconds": 0.87,
+  "exit_code": 1,
+  "summary": [
+    "System check identified no issues (0 silenced).",
+    "AUDIT: CareerHub migration drift detected; release check FAILED. Applying only existing migrations to this disposable DB to test restore tooling, not approving the schema.",
+    "AUDIT: isolated CareerHub migration graph applied on disposable PostgreSQL with one fictional account; no mail or identity provisioning",
+    "Migrations for 'tvg_careerhub_accounts':",
+    "    ~ Alter field event_type on candidatesecurityevent"
+  ],
+  "exception": null
+}

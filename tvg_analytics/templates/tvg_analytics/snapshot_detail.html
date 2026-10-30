@@ -1,0 +1,76 @@
+{% extends "index.html" %}
+{% block content %}
+<main class="oh-wrapper tvg-analytics" aria-labelledby="tvg-snapshot-title">
+  <style>
+    .tvg-analytics table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+    .tvg-analytics th, .tvg-analytics td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #eceff1; vertical-align: top; }
+    .tvg-analytics caption { text-align: left; font-weight: 600; padding: .5rem 0; }
+    .tvg-analytics .tvg-muted { color: #5f6368; }
+    .tvg-analytics .tvg-failed { color: #b3261e; font-weight: 600; }
+  </style>
+  <p><a href="{% url 'analytics:executive' %}">← Back to analytics</a></p>
+  <h1 id="tvg-snapshot-title">Analytics snapshot, revision {{ snapshot.revision }}</h1>
+  <dl>
+    <dt>Status</dt><dd>{{ snapshot.get_status_display }}{% if snapshot.last_error %} — {{ snapshot.last_error }}{% endif %}</dd>
+    <dt>Period</dt><dd>{{ snapshot.period_start }} – {{ snapshot.period_end }} (as of {{ snapshot.as_of_date }})</dd>
+    <dt>Filters</dt><dd>{% for key, value in snapshot.filters.items %}{% if key != "period_start" and key != "period_end" %}{{ key }}={{ value }} {% endif %}{% empty %}none{% endfor %}</dd>
+    <dt>Schema version</dt><dd>{{ snapshot.schema_version }}</dd>
+    <dt>Generated</dt><dd>{{ snapshot.generated_at }}</dd>
+    {% if snapshot.exported_at %}<dt>Published</dt><dd>{{ snapshot.exported_at }}</dd>{% endif %}
+  </dl>
+
+  {% if snapshot.is_exportable and can_export %}
+  <form method="post" action="{% url 'analytics:snapshot-export' snapshot.public_id %}">
+    {% csrf_token %}
+    <button type="submit" class="oh-btn oh-btn--secondary">Publish to the Metabase reporting view</button>
+  </form>
+  {% endif %}
+
+  <table>
+    <caption>Automated validation and reconciliation checks</caption>
+    <thead><tr><th scope="col">Check</th><th scope="col">Outcome</th><th scope="col">Expected</th><th scope="col">Actual</th><th scope="col">Detail</th></tr></thead>
+    <tbody>
+    {% for result in validation_results %}
+      <tr>
+        <th scope="row">{{ result.check_code }}</th>
+        <td{% if result.outcome == "failed" %} class="tvg-failed"{% endif %}>{{ result.get_outcome_display }}</td>
+        <td>{% if result.expected_value != None %}{{ result.expected_value|floatformat:"-2" }}{% else %}—{% endif %}</td>
+        <td>{% if result.actual_value != None %}{{ result.actual_value|floatformat:"-2" }}{% else %}—{% endif %}</td>
+        <td class="tvg-muted">{{ result.detail }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="tvg-muted">No checks recorded.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  {% if export_attempts %}
+  <table>
+    <caption>Export attempts</caption>
+    <thead><tr><th scope="col">#</th><th scope="col">Destination</th><th scope="col">Outcome</th><th scope="col">Reference / error</th><th scope="col">At</th></tr></thead>
+    <tbody>
+    {% for attempt in export_attempts %}
+      <tr><td>{{ attempt.sequence }}</td><td>{{ attempt.destination }}</td><td>{{ attempt.get_outcome_display }}</td><td>{{ attempt.external_reference|default:attempt.error_code }}</td><td>{{ attempt.attempted_at }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <table>
+    <caption>Metric points</caption>
+    <thead><tr><th scope="col">Dashboard</th><th scope="col">Metric</th><th scope="col">Breakdown</th><th scope="col">Value</th><th scope="col">Numerator / denominator</th><th scope="col">Reporting view</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.dashboard }}</td>
+        <th scope="row">{{ row.label }}</th>
+        <td>{{ row.dimension }}</td>
+        <td>{{ row.point.value|floatformat:"-2" }}</td>
+        <td>{% if row.point.denominator != None %}{{ row.point.numerator|floatformat:"-2" }} / {{ row.point.denominator|floatformat:"-2" }}{% else %}—{% endif %}</td>
+        <td>{% if row.point.is_small_cell %}Withheld (small cell){% else %}Shown{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</main>
+{% endblock %}

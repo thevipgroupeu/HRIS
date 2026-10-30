@@ -36,7 +36,9 @@ class HiddenMediaPathsTests(TestCase):
                     self.assertEqual(response.status_code, 404)
                     self.assertNotIn(b"super-secret", response.content)
 
+    @override_settings(HORILLA_PRIVATE_MEDIA_AUTHORIZER=None)
     def test_regular_upload_still_served(self):
+        # Upstream compatibility without the TVG object-authorization hook.
         with override_settings(MEDIA_ROOT=self.media_root):
             response = self.client.get("/media/visible.txt")
             self.assertEqual(response.status_code, 200)

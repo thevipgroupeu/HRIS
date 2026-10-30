@@ -1,0 +1,5 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section"><div class="shell narrow-card"><p class="eyebrow">SECURITY LIMIT</p><h1>Please wait before trying again.</h1><p>CareerHub temporarily limited requests from this browser or account identifier. This protects candidate accounts from automated abuse and credential stuffing.</p><a class="button button-secondary" href="{% url 'careerhub:landing' %}">Return to CareerHub</a></div></section>
+{% endblock %}

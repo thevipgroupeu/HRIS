@@ -1,0 +1,1 @@
+"""THEVIPGROUP interview coordination extension."""

@@ -1,0 +1,5 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section"><div class="shell narrow-card"><p class="eyebrow">LINK NOT AVAILABLE</p><h1>This verification link is invalid or expired.</h1><p>Submit the create-account form again. If an unverified account exists, CareerHub will send a fresh link without changing its password or profile.</p><a class="button button-primary" href="{% url 'careerhub:candidate-signup' %}">Request a new link</a></div></section>
+{% endblock %}

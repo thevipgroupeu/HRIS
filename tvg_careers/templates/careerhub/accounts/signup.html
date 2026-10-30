@@ -1,0 +1,39 @@
+{% extends 'careerhub/base.html' %}
+
+{% block body_class %}page-account{% endblock %}
+
+{% block content %}
+<section class="section account-section">
+  <div class="shell account-layout">
+    <div class="account-intro">
+      <p class="eyebrow">CANDIDATE ACCOUNT</p>
+      <h1>Create one account for every application.</h1>
+      <p>Use a personal email address you can access throughout recruitment. Your account remains separate from employee and administrator sign-in.</p>
+      <ul class="check-list">
+        <li>Verify your email before signing in</li>
+        <li>Use a unique password of at least 12 characters</li>
+        <li>Never share verification or recovery links</li>
+      </ul>
+    </div>
+    <div class="account-card">
+      <h2>Create account</h2>
+      {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="form-grid-two">
+          <div class="field"><label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>{{ form.first_name }}{{ form.first_name.errors }}</div>
+          <div class="field"><label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>{{ form.last_name }}{{ form.last_name.errors }}</div>
+        </div>
+        <div class="field"><label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>{{ form.email }}{{ form.email.errors }}<p class="field-help">Do not use a shared inbox.</p></div>
+        <div class="field"><label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>{{ form.password1 }}{{ form.password1.errors }}<p class="field-help">Use 12 or more characters. Avoid names, common passwords and all-numeric passwords.</p></div>
+        <div class="field"><label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>{{ form.password2 }}{{ form.password2.errors }}</div>
+        <div class="choice-field">{{ form.privacy_notice_acknowledged }}<label for="{{ form.privacy_notice_acknowledged.id_for_label }}">I have read the <a href="{% url 'careerhub:privacy' %}">CareerHub privacy notice</a> (version {{ privacy_notice_version }}).</label>{{ form.privacy_notice_acknowledged.errors }}</div>
+        <div class="choice-field">{{ form.talent_pool_consent }}<label for="{{ form.talent_pool_consent.id_for_label }}">{{ form.talent_pool_consent.label }}</label>{{ form.talent_pool_consent.errors }}</div>
+        <button class="button button-primary button-block" type="submit">Create account</button>
+      </form>
+      <p class="account-switch">Already verified? <a href="{% url 'careerhub:candidate-login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

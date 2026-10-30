@@ -48,8 +48,13 @@ def validate_production_secrets(secret_key, allowed_hosts, db_init_password):
             "change-me*). Set a unique SECRET_KEY before running with DEBUG=False."
         )
 
+    if secret_key and (len(secret_key) < 50 or len(set(secret_key)) < 5):
+        errors.append(
+            "SECRET_KEY must contain at least 50 characters and 5 distinct characters."
+        )
+
     hosts = list(allowed_hosts or [])
-    if not hosts or hosts == ["*"] or set(hosts) == {"*"}:
+    if not hosts or any(not host.strip() or "*" in host for host in hosts):
         errors.append(
             "ALLOWED_HOSTS must be set to your real hostnames in production "
             '(not "*" or empty).'

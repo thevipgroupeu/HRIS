@@ -1,0 +1,39 @@
+{
+  "run_at_utc": "2026-10-30T10:13:03.089555+00:00",
+  "scope": "read-only Compose rendering with synthetic env; service env files not loaded",
+  "checks": [
+    {
+      "check": "only-loopback-tunnel-port-published",
+      "passed": true
+    },
+    {
+      "check": "application-database-cache-ports-not-published",
+      "passed": true
+    },
+    {
+      "check": "production-does-not-bind-mount-source",
+      "passed": true
+    },
+    {
+      "check": "startup-does-not-migrate",
+      "passed": true
+    },
+    {
+      "check": "separate-database-volumes",
+      "passed": true
+    },
+    {
+      "check": "single-scheduler",
+      "passed": true
+    },
+    {
+      "check": "strict-public-and-staff-hosts",
+      "passed": true
+    },
+    {
+      "check": "healthchecks-validate-host-scheme-and-response",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

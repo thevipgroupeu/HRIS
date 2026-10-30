@@ -1,0 +1,8 @@
+{% extends 'index.html' %}
+{% block content %}
+<main class="oh-wrapper">
+  <div class="oh-main__titlebar oh-main__titlebar--left"><h1 class="oh-main__titlebar-title fw-bold">Invite {{ application.candidate.name }}</h1></div>
+  <p>{{ application.opening.title }}. Creating this record queues a candidate notification event; it does not send real mail.</p>
+  <form method="post" class="oh-card-dashboard oh-card-dashboard--no-scale">{% csrf_token %}{{ form.as_p }}<button class="oh-btn oh-btn--secondary" type="submit">Create invitation</button></form>
+</main>
+{% endblock %}

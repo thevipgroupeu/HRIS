@@ -1,0 +1,98 @@
+{% extends 'careerhub/base.html' %}
+
+{% block body_class %}page-opportunities{% if venture_slug %} venture-{{ venture_slug }}{% endif %}{% endblock %}
+
+{% block content %}
+<section class="page-hero"{% if venture_slug %} data-venture="{{ venture_slug }}"{% endif %}>
+  <div class="shell page-hero-grid">
+    <div>
+      <p class="eyebrow">{% if venture_page %}{{ venture_page.eyebrow }}{% else %}FLUXOPS · FINDMYSTAY · THEVIPGROUP{% endif %}</p>
+      <h1>{% if venture_page %}{{ venture_page.headline }}{% else %}Find work worth learning from.{% endif %}</h1>
+    </div>
+    <p>{% if venture_page %}{{ venture_page.summary }}{% else %}Search current internships and jobs. Every listing comes directly from our PeopleOps system, with its venture, scope and application window intact.{% endif %}</p>
+  </div>
+</section>
+
+<section class="section opportunities-layout">
+  <div class="shell">
+    <form class="filters" method="get" aria-label="Filter opportunities">
+      <div class="filter-search">
+        <label for="filter-q">Skills or keywords</label>
+        <input id="filter-q" type="search" name="q" value="{{ active_filters.q }}" placeholder="e.g. Python, product, operations">
+      </div>
+      {% if not venture_page %}
+      <div>
+        <label for="filter-venture">Venture</label>
+        <select id="filter-venture" name="venture">
+          <option value="">All ventures</option>
+          {% for value, label in facets.ventures %}<option value="{{ value }}"{% if active_filters.venture == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div>
+        <label for="filter-department">Department</label>
+        <select id="filter-department" name="department">
+          <option value="">All departments</option>
+          {% for value in facets.departments %}<option value="{{ value }}"{% if active_filters.department == value %} selected{% endif %}>{{ value }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="filter-category">Category</label>
+        <select id="filter-category" name="category">
+          <option value="">Internships and jobs</option>
+          {% for value, label in facets.categories %}<option value="{{ value }}"{% if active_filters.category == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="filter-location">Location</label>
+        <select id="filter-location" name="location">
+          <option value="">All locations</option>
+          {% for value in facets.locations %}<option value="{{ value }}"{% if active_filters.location == value %} selected{% endif %}>{{ value }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="filter-mode">Work mode</label>
+        <select id="filter-mode" name="work_mode">
+          <option value="">Office, hybrid or remote</option>
+          {% for value, label in facets.work_modes %}<option value="{{ value }}"{% if active_filters.work_mode == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="filter-erasmus">Erasmus+</label>
+        <select id="filter-erasmus" name="erasmus">
+          <option value="">All roles</option>
+          <option value="true"{% if active_filters.erasmus == 'true' %} selected{% endif %}>Erasmus+ applicable</option>
+          <option value="false"{% if active_filters.erasmus == 'false' %} selected{% endif %}>Not Erasmus+ specific</option>
+        </select>
+      </div>
+      <div>
+        <label for="filter-status">Application status</label>
+        <select id="filter-status" name="status">
+          <option value="">All published roles</option>
+          {% for value, label in facets.statuses %}<option value="{{ value }}"{% if active_filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button class="button button-primary" type="submit">Apply filters</button>
+        <a class="button button-quiet" href="{{ clear_filters_url }}">Clear</a>
+      </div>
+    </form>
+
+    <div class="results-heading" aria-live="polite">
+      <h2>{{ job_count }} opportunit{{ job_count|pluralize:"y,ies" }}</h2>
+      <p>Only published roles from THEVIPGROUP PeopleOps are shown.</p>
+    </div>
+    <div class="job-grid job-grid-wide">
+      {% for job in jobs %}
+        {% include 'careerhub/partials/job_card.html' with job=job %}
+      {% empty %}
+        <div class="empty-state">
+          <h3>No opportunities match those filters.</h3>
+          <p>Try clearing a filter or browse all currently published roles.</p>
+          <a class="button button-secondary" href="{{ clear_filters_url }}">Clear filters</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

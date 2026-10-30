@@ -1,0 +1,13 @@
+{
+  "mode": "migrations",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "temporary in-memory SQLite",
+  "elapsed_seconds": 1042.58,
+  "exit_code": 0,
+  "summary": [
+    "No changes detected"
+  ],
+  "exception": null
+}

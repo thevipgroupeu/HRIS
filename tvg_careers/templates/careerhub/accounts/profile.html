@@ -1,0 +1,30 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section account-section">
+  <div class="shell">
+    {% include 'careerhub/accounts/partials/portal_nav.html' %}
+  </div>
+  <div class="shell profile-layout profile-layout-wide">
+    <div>
+      <p class="eyebrow">CANDIDATE PROFILE</p><h1>{{ account.get_full_name }}</h1><p>{{ account.email }}</p>
+      {% if account.applicant_functions_enabled %}<div class="status-panel status-panel-success"><strong>Verified and linked</strong><span>Your account is ready for future application functions.</span></div>{% else %}<div class="status-panel status-panel-review"><strong>Email verified · identity review pending</strong><span>You can manage this profile. Application functions remain disabled until the identity link is reviewed.</span></div>{% endif %}
+      <dl class="profile-facts"><div><dt>Privacy notice acknowledged</dt><dd>{{ account.privacy_notice_version }} · {{ account.privacy_notice_acknowledged_at|date:"d M Y, H:i T" }}</dd></div><div><dt>Email status</dt><dd>Verified</dd></div></dl>
+    </div>
+    <div class="account-card">
+      <h2>Reusable profile</h2>
+      {% if profile_saved %}<div class="notice" role="status">Your profile was updated.</div>{% endif %}
+      <form method="post" novalidate>{% csrf_token %}
+        <div class="form-grid-two">
+        {% for field in form %}{% if field.name != 'talent_pool_consent' %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}{{ field.errors }}</div>{% endif %}{% endfor %}
+        </div>
+        <div class="choice-field">{{ form.talent_pool_consent }}<label for="{{ form.talent_pool_consent.id_for_label }}">{{ form.talent_pool_consent.label }}</label>{{ form.talent_pool_consent.errors }}</div>
+        <button class="button button-primary" type="submit">Save profile</button>
+      </form>
+      <hr>
+      <a href="{% url 'careerhub:candidate-password-reset' %}">Reset password</a>
+      <form class="account-logout" method="post" action="{% url 'careerhub:candidate-logout' %}">{% csrf_token %}<button class="button button-quiet" type="submit">Sign out</button></form>
+    </div>
+  </div>
+</section>
+{% endblock %}

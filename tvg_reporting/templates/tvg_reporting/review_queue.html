@@ -1,0 +1,9 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Supervisor review queue{% endblock %}
+{% block content %}
+<h1>Supervisor review queue</h1>
+<div class="grid">
+  <section class="card"><h2>Weekly reports</h2><ul>{% for report in weekly_reports %}<li><a href="{% url 'reporting:weekly-review' report.public_id %}">{{ report.employee.get_full_name }} — {{ report.reporting_week }}</a></li>{% empty %}<li>Nothing awaiting review.</li>{% endfor %}</ul></section>
+  <section class="card"><h2>Monthly presentations</h2><ul>{% for presentation in presentations %}<li><a href="{% url 'reporting:presentation-review' presentation.public_id %}">{{ presentation.employee.get_full_name }} — {{ presentation.presentation_month|date:"F Y" }}</a></li>{% empty %}<li>Nothing awaiting review.</li>{% endfor %}</ul></section>
+</div>
+{% endblock %}

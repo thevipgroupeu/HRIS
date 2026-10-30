@@ -25,7 +25,7 @@
 # Do not "tidy" the ranges into exact pins.
 
 # Core Django
-Django~=5.2.17  # ~= keeps 5.2.x security patches (CVE-2025-64459 fixed in 5.2.8)
+Django~=5.2.18  # Keep the supported 5.2.x security-patch line.
 django-environ==0.14.0
 psycopg2-binary>=2.9.13,<3
 
@@ -50,7 +50,8 @@ django-widget-tweaks==1.5.1
 # invalid write, disclosing data the caller's permissions deny on GET --
 # not reachable here, since no view sets AdminRenderer, but pinned past it
 # anyway rather than relying on that staying true).
-djangorestframework==3.18.1
+# Includes October 2026 security fixes and the 3.18.3 compatibility repair.
+djangorestframework==3.18.3
 # 5.5.1, not 5.5.0: 5.5.0 caps pyjwt<2.10.0, which pins the JWT library to
 # a version with the advisories below. 5.5.1 drops the cap (pyjwt>=1.7.1).
 djangorestframework-simplejwt==5.5.1
@@ -160,12 +161,13 @@ packaging==26.3
 #
 # msgpack arrives via CacheControl. 1.1.2 has an out-of-bounds read that
 # crashes on Unpacker reuse (GHSA-6v7p-g79w-8964); 1.2.1 fixes it.
-msgpack>=1.2.2,<2
+msgpack>=1.2.3,<2
 # setuptools comes from the base image and is required at runtime by spacy
 # and thinc. 70.3.0 carries a path traversal (CVE-2025-47273), and
 # pip install --upgrade pip does not upgrade setuptools, so the image kept
 # the old one. Neither spacy nor thinc caps the version.
-setuptools==84.0.0
+# 84.1.0 also fixes GHSA-xmj3-9gf7-h52w (Windows installation paths).
+setuptools==84.1.0
 
 # Testing
 coverage>=7.0

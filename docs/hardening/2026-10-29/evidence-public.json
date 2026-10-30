@@ -1,0 +1,18 @@
+{
+  "run_at_utc": "2026-10-30T10:38:23.510202+00:00",
+  "runtime": "public",
+  "schema": false,
+  "python": "3.12.16",
+  "django": "5.2.18",
+  "database": "isolated in-memory SQLite",
+  "mail": "local-memory only",
+  "elapsed_seconds": 7.23,
+  "exit_code": 0,
+  "summary": [
+    "System check identified no issues (0 silenced).",
+    "Found 44 test(s).",
+    "System check identified no issues (0 silenced).",
+    "Ran 44 tests in 3.137s",
+    "OK"
+  ]
+}

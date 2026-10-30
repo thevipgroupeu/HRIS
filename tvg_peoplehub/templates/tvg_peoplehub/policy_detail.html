@@ -1,0 +1,3 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}{{ policy.title }}{% endblock %}
+{% block content %}<article class="card"><h1>{{ policy.title }}</h1>{{ policy.body|linebreaks }}</article>{% endblock %}

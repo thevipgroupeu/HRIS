@@ -1,0 +1,134 @@
+name: TVG portal release checks
+
+on:
+  push:
+    branches: [dev/v2.0, "2.0"]
+  pull_request:
+    branches: [dev/v2.0, "2.0"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-portals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [private, public]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install rendering dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libffi8 shared-mime-info
+      - name: Install application dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Isolated schema checks
+        run: python scripts/check_tvg_release.py ${{ matrix.runtime }} --schema --report artifacts/schema.json
+      - name: Synthetic portal and extension suites
+        run: python scripts/check_tvg_release.py ${{ matrix.runtime }} --report artifacts/tests.json
+      - name: Isolated nginx routing and header checks
+        if: matrix.runtime == 'private'
+        run: |
+          docker pull nginx:alpine
+          python scripts/check_tvg_proxy.py --report artifacts/proxy.json
+          python scripts/check_tvg_compose.py --report artifacts/compose.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tvg-${{ matrix.runtime }}-checks
+          path: artifacts/*.json
+
+  postgres-redis-boundaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tvg_ci
+          POSTGRES_PASSWORD: tvg_ci
+          POSTGRES_DB: tvg_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U tvg_ci -d tvg_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: horilla.settings.tvg_postgres_fast_test
+      DEBUG: "False"
+      HORILLA_ENV: test
+      SECRET_KEY: synthetic-ci-secret-key-000000000000000000000000000000
+      DB_INIT_PASSWORD: synthetic-ci-only
+      ALLOWED_HOSTS: testserver,localhost,people.thevipgroup.eu
+      CSRF_TRUSTED_ORIGINS: https://people.thevipgroup.eu
+      DATABASE_URL: postgres://tvg_ci:tvg_ci@localhost:5432/tvg_ci
+      REDIS_URL: redis://localhost:6379/0
+      TVG_LEGAL_EMPLOYER_ID: "1"
+      TVG_SYNTHETIC_MEDIA_ROOT: /tmp/tvg-ci-media
+      CAREERHUB_INTERNAL_API_TOKEN: synthetic-read-token-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      CAREERHUB_IDENTITY_API_TOKEN: synthetic-identity-token-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      CAREERHUB_APPLICATION_API_TOKEN: synthetic-application-token-cccccccccccccccccccccccccccccccc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install rendering dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libffi8 shared-mime-info
+      - name: Install application dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Production-style configuration and Redis preflight
+        run: |
+          python manage.py check --settings=horilla.settings.tvg_postgres_fast_test --fail-level WARNING
+          python -c "import django; django.setup(); from django.core.cache import cache; cache.set('tvg-ci-probe','ok',30); assert cache.get('tvg-ci-probe') == 'ok'"
+      - name: Apply the complete private migration graph on PostgreSQL 16
+        run: python manage.py migrate --settings=horilla.settings.tvg_postgres_test --noinput
+      - name: TVG extensions on PostgreSQL 16 and Redis 7
+        run: make test-tvg TVG_TEST_SETTINGS=horilla.settings.tvg_postgres_fast_test
+      - name: CareerHub accounts on PostgreSQL 16 and Redis 7
+        env:
+          DJANGO_SETTINGS_MODULE: horilla.settings.careerhub
+          DEBUG: "1"
+          HORILLA_ENV: test
+          CAREERHUB_SECRET_KEY: synthetic-public-ci-secret-key-000000000000000000000000000000
+          CAREERHUB_DATABASE_URL: postgres://tvg_ci:tvg_ci@localhost:5432/tvg_ci
+          CAREERHUB_REDIS_URL: redis://localhost:6379/1
+          CAREERHUB_ALLOWED_HOSTS: testserver,localhost,career.thevipgroup.eu
+          CAREERHUB_CSRF_TRUSTED_ORIGINS: https://career.thevipgroup.eu
+          CAREERHUB_PUBLIC_BASE_URL: https://career.thevipgroup.eu
+          CAREERHUB_INTERNAL_API_TOKEN: synthetic-read-token-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          CAREERHUB_IDENTITY_API_TOKEN: synthetic-identity-token-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+          CAREERHUB_APPLICATION_API_TOKEN: synthetic-application-token-cccccccccccccccccccccccccccccccc
+          CAREERHUB_VERIFICATION_API_TOKEN: synthetic-verification-token-dddddddddddddddddddddddddddddddd
+          CAREERHUB_INTERVIEW_API_TOKEN: synthetic-interview-token-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+          CAREERHUB_ARRANGEMENT_API_TOKEN: synthetic-arrangement-token-ffffffffffffffffffffffffffffffff
+          CAREERHUB_EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+          CAREERHUB_SECURE_SSL_REDIRECT: "0"
+        run: python manage.py test tvg_careers.accounts.tests --verbosity=1 --noinput
+
+# These jobs supplement the native PostgreSQL suite and explicit migration
+# rehearsal. They do not replace deployed staging acceptance.

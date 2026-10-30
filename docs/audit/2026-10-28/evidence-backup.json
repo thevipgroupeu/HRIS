@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-28",
+  "postgres": "postgres (PostgreSQL) 16.15",
+  "database_restore_equal": true,
+  "synthetic_persons": 1,
+  "synthetic_applications": 2,
+  "synthetic_file_roots_verified": [
+    "media",
+    "careerhub-private-media",
+    "verification-private-media",
+    "acceptance-private-media",
+    "erasmus-document-private-media",
+    "onboarding-private-media",
+    "reporting-private-media",
+    "offboarding-private-media"
+  ],
+  "elapsed_seconds": 4.92,
+  "scope": "toolchain smoke drill only; not a full PeopleOps/CareerHub backup, encryption, PITR, RPO or RTO certification"
+}

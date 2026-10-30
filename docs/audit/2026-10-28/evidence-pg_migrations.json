@@ -1,0 +1,16 @@
+{
+  "mode": "pg_migrations",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "disposable PostgreSQL 16 (tvg_audit_django)",
+  "elapsed_seconds": 921.95,
+  "exit_code": 0,
+  "summary": [
+    "System check identified no issues (0 silenced).",
+    "System check identified no issues (0 silenced).",
+    "No changes detected",
+    "AUDIT: full PeopleOps migration graph applied on disposable PostgreSQL; one fictional Person with two linked native Candidates/Applications created"
+  ],
+  "exception": null
+}

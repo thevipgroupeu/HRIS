@@ -1,0 +1,71 @@
+{% extends 'index.html' %}
+{% block content %}
+<main class="oh-wrapper">
+  <div class="oh-main__titlebar oh-main__titlebar--left"><h1 class="oh-main__titlebar-title fw-bold">Interview coordination</h1></div>
+  <p>Candidate bookings are gated by completed verification. Calendar and notification events remain simulated until an approved provider and dispatcher are configured.</p>
+
+  <section class="oh-card-dashboard oh-card-dashboard--no-scale mb-3">
+    <div class="oh-card-dashboard__header"><h2>Verified applications</h2></div>
+    <div class="oh-card-dashboard__body">
+      {% for application in applications %}
+        <article class="mb-3">
+          <strong>{{ application.candidate.name }} — {{ application.opening.title }}</strong>
+          <span>Verification: {{ application.verification_case.get_status_display|default:'Not requested' }}</span>
+          {% if application.verification_case.status == 'verified' or application.verification_case.status == 'not_required' %}
+            <a class="oh-btn oh-btn--secondary" href="{% url 'tvg_interviews:invite' application.public_id %}">Create interview invitation</a>
+          {% endif %}
+        </article>
+      {% empty %}<p>No assigned applications.</p>{% endfor %}
+    </div>
+  </section>
+
+  {% for invitation in invitations %}
+    <section class="oh-card-dashboard oh-card-dashboard--no-scale mb-3">
+      <div class="oh-card-dashboard__header"><h2>{{ invitation.application.candidate.name }} — {{ invitation.interview_type.name }}</h2></div>
+      <div class="oh-card-dashboard__body">
+        <p><strong>Status:</strong> {{ invitation.get_status_display }} · <strong>Role:</strong> {{ invitation.application.opening.title }}</p>
+        <p><strong>Interviewers:</strong> {% for employee in invitation.interviewers.all %}{{ employee.get_full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        {% if invitation.booking %}
+          <p><strong>Company time:</strong> {{ invitation.booking.slot.start_at }} (Europe/Warsaw) · <strong>Candidate timezone:</strong> {{ invitation.booking.candidate_timezone }}</p>
+          {% if invitation.booking.status == 'booked' %}
+            <form method="post" action="{% url 'tvg_interviews:complete' invitation.booking.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--secondary" type="submit">Mark interview complete</button></form>
+            <form method="post" action="{% url 'tvg_interviews:staff-reschedule' invitation.booking.public_id %}">{% csrf_token %}
+              <label>Replacement slot<select name="slot" required>{% for slot in invitation.slots.all %}{% if slot.status == 'available' %}<option value="{{ slot.pk }}">{{ slot.start_at }}</option>{% endif %}{% endfor %}</select></label>
+              <label><input type="checkbox" name="override_notice"> Authorized HR notice override</label>
+              <button class="oh-btn oh-btn--light-bkg" type="submit">Reschedule</button>
+            </form>
+            <form method="post" action="{% url 'tvg_interviews:cancel' invitation.booking.public_id %}">{% csrf_token %}<label>Internal cancellation reason<input name="reason"></label><button class="oh-btn oh-btn--danger" type="submit">Cancel interview</button></form>
+          {% elif invitation.booking.status == 'completed' %}
+            {% if can_view_feedback and invitation.booking.feedback_entries.all %}
+              <h3>Authorized staff feedback</h3>
+              {% for feedback in invitation.booking.feedback_entries.all %}
+                <article class="oh-card-dashboard mb-2"><strong>{{ feedback.interviewer.get_full_name }}</strong><p>Recommendation: {{ feedback.get_recommendation_display }}</p><p>Ratings: {{ feedback.competency_ratings }}</p><p>Strengths: {{ feedback.strengths|default:'—' }}</p><p>Concerns: {{ feedback.concerns|default:'—' }}</p><p>Private notes: {{ feedback.private_notes|default:'—' }}</p></article>
+              {% endfor %}
+            {% endif %}
+            <h3>Private interviewer feedback</h3>
+            <form method="post" action="{% url 'tvg_interviews:feedback' invitation.booking.public_id %}">{% csrf_token %}
+              <label>Competency ratings (JSON)<textarea name="competency_ratings" required>{"Communication": 3}</textarea></label>
+              <label>Strengths<textarea name="strengths"></textarea></label>
+              <label>Concerns<textarea name="concerns"></textarea></label>
+              <label>Private notes<textarea name="private_notes"></textarea></label>
+              <label>Recommendation<select name="recommendation"><option value="none">No recommendation</option><option value="selected">Selected</option><option value="rejected">Rejected</option><option value="hold">On hold</option></select></label>
+              <button class="oh-btn oh-btn--secondary" type="submit">Submit immutable feedback</button>
+            </form>
+            {% if not invitation.booking.decision %}
+              <h3>Human recruitment decision</h3>
+              <form method="post" action="{% url 'tvg_interviews:decision' invitation.booking.public_id %}">{% csrf_token %}
+                <label>Decision<select name="outcome"><option value="selected">Selected</option><option value="rejected">Rejected</option><option value="hold">On hold</option></select></label>
+                <label>Approved message template<select name="template"><option value="">Built-in selected/on-hold message</option>{% for template in decision_templates %}<option value="{{ template.pk }}">{{ template.name }} ({{ template.get_outcome_display }})</option>{% endfor %}</select></label>
+                <label>Internal human rationale<textarea name="internal_reason"></textarea></label>
+                <button class="oh-btn oh-btn--secondary" type="submit">Record human decision</button>
+              </form>
+            {% else %}<p><strong>Decision:</strong> {{ invitation.booking.decision.get_outcome_display }}</p>{% endif %}
+          {% endif %}
+        {% else %}
+          <p>Awaiting candidate slot selection. Available slots: {{ invitation.slots.count }}</p>
+        {% endif %}
+      </div>
+    </section>
+  {% empty %}<div class="oh-empty"><p>No interview invitations are assigned to you.</p></div>{% endfor %}
+</main>
+{% endblock %}

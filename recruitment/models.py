@@ -63,11 +63,22 @@ def validate_mobile(value):
 
 def validate_pdf(value):
     """
-    This method is used to validate pdf
+    Validate the native Candidate resume types.
+
+    Keep this historical callable name because existing Horilla migrations
+    reference it. CareerHub adds DOCX support, but only after the shared
+    structural validator rejects malformed, encrypted, macro-enabled or
+    embedded-object documents.
     """
     ext = os.path.splitext(value.name)[1]  # Get file extension
-    if ext.lower() != ".pdf":
-        raise ValidationError(_("File must be a PDF."))
+    if ext.lower() == ".pdf":
+        return
+    if ext.lower() == ".docx":
+        from tvg_careers.document_security import inspect_candidate_document
+
+        inspect_candidate_document(value, allowed_extensions=(".docx",))
+        return
+    raise ValidationError(_("File must be a PDF or DOCX."))
 
 
 def validate_image(value):

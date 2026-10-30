@@ -1,0 +1,10 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section portal-section"><div class="shell reading-width">
+  <p class="eyebrow">SECURE VERIFICATION</p><h1>{{ requirement.title }}</h1>
+  <div class="notice" role="alert">The document was not accepted. No file was retained.</div>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.as_p }}<button class="button button-primary" type="submit">Try again</button></form>
+  <p><a class="text-link" href="{% url 'careerhub:candidate-dashboard' %}">Return to dashboard</a></p>
+</div></section>
+{% endblock %}

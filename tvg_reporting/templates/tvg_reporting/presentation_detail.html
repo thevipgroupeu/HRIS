@@ -1,0 +1,27 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Monthly presentation{% endblock %}
+{% block content %}
+<h1>{{ presentation.presentation_month|date:"F Y" }} presentation</h1>
+<p><strong>{{ presentation.employee.get_full_name }}</strong> · {{ presentation.assigned_project.title }} · {{ presentation.get_status_display }} · deadline {{ presentation.deadline_at }}</p>
+<div class="card">
+  <p>Presentation date: {{ presentation.presentation_date }}</p>
+  <h2>Project milestones</h2><p>{{ presentation.project_milestones|linebreaksbr }}</p>
+  <p>File: {{ presentation.original_filename|default:"No file uploaded" }}</p>
+  {% if presentation.employee_id == portal_employee.id and presentation.status == 'draft' or presentation.employee_id == portal_employee.id and presentation.status == 'revision_required' %}
+    <p><a class="button" href="{% url 'reporting:presentation-edit' presentation.public_id %}">Edit draft</a></p>
+    <form method="post" action="{% url 'reporting:presentation-submit' presentation.public_id %}">{% csrf_token %}<button type="submit">Submit to supervisor</button></form>
+  {% endif %}
+  {% if presentation.status == 'submitted' and can_review_current %}
+    <p><a class="button" href="{% url 'reporting:presentation-review' presentation.public_id %}">Review current version</a></p>
+  {% endif %}
+</div>
+<section class="card">
+  <h2>Submission and review history</h2>
+  <ol>
+    {% for version in versions %}
+      <li>Version {{ version.version_number }} submitted {{ version.submitted_at }} · <a href="{% url 'reporting:presentation-download' version.id %}">controlled download</a>
+      {% if version.review %}— {{ version.review.get_outcome_display }} by {{ version.review.reviewer.get_full_name }}: {{ version.review.comments }}{% else %}— awaiting review{% endif %}</li>
+    {% empty %}<li>No submitted versions.</li>{% endfor %}
+  </ol>
+</section>
+{% endblock %}

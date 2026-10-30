@@ -1,0 +1,82 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Internship completion{% endblock %}
+{% block content %}
+<h1>Internship completion: {{ case.employee.get_full_name }}</h1>
+<p><strong>State:</strong> {{ case.get_state_display }} · <strong>End date:</strong> {{ case.internship_end_date }} · <strong>Intern ID:</strong> {{ case.onboarding.intern_id }}</p>
+
+{% if can_manage and not case.started_at %}<form method="post" action="{% url 'completion:start' case.onboarding.public_id %}">{% csrf_token %}<button type="submit">Start completion workflow</button></form>{% endif %}
+
+{% if can_manage and case.state != "completed" %}
+<p>
+  <a class="button" href="{% url 'completion:presentation-schedule' case.public_id %}">Schedule final presentation</a>
+  <a class="button" href="{% url 'completion:report-link' case.public_id %}">Link final reports</a>
+  <a class="button" href="{% url 'completion:feedback' case.public_id %}">Record feedback</a>
+  <a class="button" href="{% url 'completion:document-prepare' case.public_id %}">Prepare document</a>
+</p>
+{% endif %}
+
+<section class="card">
+  <h2>Mandatory completion gate</h2>
+  <table><thead><tr><th>Requirement</th><th>Mandatory</th><th>Status</th><th>Evidence</th><th>Action</th></tr></thead><tbody>
+  {% for item in requirements %}<tr>
+    <td>{{ item.title }}</td><td>{{ item.required|yesno:"Yes,No" }}</td><td>{{ item.get_status_display }}</td>
+    <td>{{ item.source_type }}{% if item.source_reference %}: {{ item.source_reference }}{% endif %}</td>
+    <td>{% if can_exception and item.required and item.status == "pending" and item.code != "administrative_closure" and item.code != "asset_return" and item.code != "access_revocation" %}<a href="{% url 'completion:requirement-exception' case.public_id item.pk %}">Authorized exception</a>{% endif %}</td>
+  </tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<div class="grid">
+  <section class="card"><h2>Final presentation and feedback</h2>
+    <p><strong>Scheduled:</strong> {{ case.final_presentation_scheduled_for|default:"Not scheduled" }}</p>
+    {% if case.final_feedback %}<p><strong>Reviewer:</strong> {{ case.final_feedback.reviewer }}<br>{{ case.final_feedback.comments }}</p>{% else %}<p>No final feedback recorded.</p>{% endif %}
+  </section>
+  <section class="card"><h2>University After Mobility documents</h2><ul>
+    {% for item in university_documents %}<li>{{ item.title }} — {{ item.get_status_display }}{% if item.required %} (required){% else %} (optional){% endif %}</li>{% empty %}<li>No university-specific After Mobility forms configured.</li>{% endfor %}
+  </ul></section>
+</div>
+
+<section class="card"><h2>Company assets</h2>
+  {% if can_manage_assets and case.state != "completed" %}<p><a class="button" href="{% url 'completion:asset-return' case.public_id %}">Record asset return</a></p>{% endif %}
+  <table><thead><tr><th>Asset</th><th>Serial/item</th><th>Returned</th><th>Condition</th></tr></thead><tbody>
+  {% for item in assets %}<tr><td>{{ item.asset_id }}</td><td>{{ item.asset_item_id|default:item.asset_id.asset_tracking_id }}</td><td>{{ item.return_date|default:"Outstanding" }}</td><td>{{ item.return_status|default:"—" }}</td></tr>{% empty %}<tr><td colspan="4">No asset assignments.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card"><h2>Access revocation</h2>
+  <table><thead><tr><th>System</th><th>Status</th><th>Proof reference</th><th>Action</th></tr></thead><tbody>
+  {% for item in access_tasks %}<tr><td>{{ item.system_label }}</td><td>{{ item.get_status_display }}</td><td>{{ item.proof_reference|default:"—" }}</td><td>
+    {% if can_manage_access and item.status == "requested" or can_manage_access and item.status == "failed" %}<form method="post" action="{% url 'completion:access-attempt' case.public_id item.public_id %}">{% csrf_token %}<button type="submit">Attempt revocation</button></form>{% endif %}
+    {% if can_manage_access and item.status == "manual_required" %}<a href="{% url 'completion:access-manual' case.public_id item.public_id %}">Record manual completion</a>{% endif %}
+    {% if can_exception and item.status != "revoked" and item.status != "excepted" %} · <a href="{% url 'completion:access-exception' case.public_id item.public_id %}">Authorized exception</a>{% endif %}
+  </td></tr>{% empty %}<tr><td colspan="4">No access systems configured.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card"><h2>Completion documents and history</h2>
+  <table><thead><tr><th>Type/version</th><th>Issue date</th><th>Status</th><th>Human signatures</th><th>Action</th></tr></thead><tbody>
+  {% for item in documents %}<tr><td>{{ item.get_kind_display }} v{{ item.version_number }}</td><td>{{ item.issue_date }}</td><td>{{ item.get_status_display }}</td><td>{% for signature in item.signatures.all %}{{ signature.get_signer_role_display }} ({{ signature.signed_at }}){% if not forloop.last %}<br>{% endif %}{% empty %}None{% endfor %}</td><td>
+    <a href="{% url 'completion:document-download' case.public_id item.public_id %}">Download</a>
+    {% if item.status == "prepared" %} · <a href="{% url 'completion:document-sign' case.public_id item.public_id %}">Record signature</a>{% endif %}
+    {% if can_manage and item.kind == "completion_certificate" and item.status == "signed" %}<form method="post" action="{% url 'completion:document-issue' case.public_id item.public_id %}">{% csrf_token %}<button type="submit">Issue certificate</button></form>{% endif %}
+  </td></tr>{% empty %}<tr><td colspan="5">No documents prepared.</td></tr>{% endfor %}
+  </tbody></table>
+</section>
+
+<section class="card"><h2>Optional reference letter</h2>
+  {% if case.reference_request %}<p>Status: {{ case.reference_request.get_status_display }}</p>
+    {% if can_manage and case.reference_request.status == "requested" %}<form method="post" action="{% url 'completion:reference-handle' case.public_id %}">{% csrf_token %}<input type="hidden" name="status" value="approved"><button type="submit">Approve request</button></form>{% endif %}
+  {% elif is_intern and case.state != "completed" %}<form method="post" action="{% url 'completion:reference-request' case.public_id %}">{% csrf_token %}<button type="submit">Request reference letter</button></form>
+  {% else %}<p>No reference letter requested.</p>{% endif %}
+</section>
+
+{% if can_complete and case.state != "completed" %}
+<section class="card"><h2>Final administrative closure</h2>
+  <p>These actions are human-authorized and fail closed while mandatory requirements, assets or access revocations remain.</p>
+  <form method="post" action="{% url 'completion:administrative-closure' case.public_id %}">{% csrf_token %}<button type="submit">Confirm administrative closure</button></form>
+  <form method="post" action="{% url 'completion:complete' case.public_id %}">{% csrf_token %}<button type="submit">Complete offboarding</button></form>
+</section>
+{% endif %}
+
+<section class="card"><h2>Audit history</h2><ul>{% for item in events %}<li>{{ item.occurred_at }} — {{ item.event_type }}{% if item.actor %} by {{ item.actor }}{% endif %}</li>{% empty %}<li>No events recorded.</li>{% endfor %}</ul></section>
+{% endblock %}

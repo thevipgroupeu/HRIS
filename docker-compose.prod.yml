@@ -10,11 +10,14 @@
 
 services:
   web:
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import Request,urlopen; u='http://127.0.0.1:8000/health/'; r=urlopen(Request(u,headers={'Host':'web','X-Forwarded-Proto':'https'}),timeout=5); assert r.status==200 and r.url==u"]
     env_file:
       - .env
     environment: !override
       DEBUG: "0"
       HORILLA_ENV: production
+      HORILLA_SKIP_RELEASE_TASKS: "1"
       DB_HOST: db
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:?Set ALLOWED_HOSTS in .env}
@@ -25,11 +28,129 @@ services:
       SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-0}
       GUNICORN_WORKERS: ${GUNICORN_WORKERS:-}
       GUNICORN_LOG_LEVEL: ${GUNICORN_LOG_LEVEL:-info}
+      TVG_LEGAL_EMPLOYER_ID: ${TVG_LEGAL_EMPLOYER_ID:?Set TVG_LEGAL_EMPLOYER_ID in .env}
+      CAREERHUB_INTERNAL_API_TOKEN: ${CAREERHUB_INTERNAL_API_TOKEN:?Set CAREERHUB_INTERNAL_API_TOKEN in .env}
+      CAREERHUB_IDENTITY_API_TOKEN: ${CAREERHUB_IDENTITY_API_TOKEN:?Set CAREERHUB_IDENTITY_API_TOKEN in .env}
+      CAREERHUB_APPLICATION_API_TOKEN: ${CAREERHUB_APPLICATION_API_TOKEN:?Set CAREERHUB_APPLICATION_API_TOKEN in .env}
+      CAREERHUB_VERIFICATION_API_TOKEN: ${CAREERHUB_VERIFICATION_API_TOKEN:?Set CAREERHUB_VERIFICATION_API_TOKEN in .env}
+      CAREERHUB_INTERVIEW_API_TOKEN: ${CAREERHUB_INTERVIEW_API_TOKEN:?Set CAREERHUB_INTERVIEW_API_TOKEN in .env}
+      CAREERHUB_ARRANGEMENT_API_TOKEN: ${CAREERHUB_ARRANGEMENT_API_TOKEN:?Set CAREERHUB_ARRANGEMENT_API_TOKEN in .env}
+      TVG_VERIFICATION_PRIVATE_MEDIA_ROOT: /app/verification-private-media
+      TVG_ACCEPTANCE_PRIVATE_MEDIA_ROOT: /app/acceptance-private-media
+      TVG_ERASMUS_DOCUMENT_PRIVATE_MEDIA_ROOT: /app/erasmus-document-private-media
+      TVG_ONBOARDING_PRIVATE_MEDIA_ROOT: /app/onboarding-private-media
+      TVG_REPORTING_PRIVATE_MEDIA_ROOT: /app/reporting-private-media
+      TVG_OFFBOARDING_PRIVATE_MEDIA_ROOT: /app/offboarding-private-media
+      TVG_AUTOMATION_ENABLED: ${TVG_AUTOMATION_ENABLED:-0}
+      TVG_AUTOMATION_ENVIRONMENT: production
+      TVG_ACTIVEPIECES_WEBHOOK_URL: ${TVG_ACTIVEPIECES_WEBHOOK_URL:-}
+      TVG_ACTIVEPIECES_OUTBOUND_SIGNING_SECRET: ${TVG_ACTIVEPIECES_OUTBOUND_SIGNING_SECRET:-}
+      TVG_ACTIVEPIECES_CALLBACK_SIGNING_SECRET: ${TVG_ACTIVEPIECES_CALLBACK_SIGNING_SECRET:-}
+      TVG_AUTOMATION_TRANSPORT_BACKEND: ${TVG_AUTOMATION_TRANSPORT_BACKEND:-tvg_automation.transport.DisabledActivepiecesTransport}
+      TVG_AUTOMATION_MAX_ATTEMPTS: ${TVG_AUTOMATION_MAX_ATTEMPTS:-5}
+      TVG_AUTOMATION_CALLBACK_MAX_SKEW_SECONDS: ${TVG_AUTOMATION_CALLBACK_MAX_SKEW_SECONDS:-300}
+      TVG_TRAINING_PROVIDER: ${TVG_TRAINING_PROVIDER:-disabled}
+      TVG_TRAINING_ACTIVEPIECES_BACKEND: ${TVG_TRAINING_ACTIVEPIECES_BACKEND:-tvg_training.integrations.DisabledTrainingProvider}
+      TVG_ANALYTICS_EXPORT_PROVIDER: ${TVG_ANALYTICS_EXPORT_PROVIDER:-disabled}
+      TVG_ANALYTICS_MIN_CELL_SIZE: ${TVG_ANALYTICS_MIN_CELL_SIZE:-5}
+      TVG_RECRUITMENT_FROM_EMAIL: recruitment@thevipgroup.eu
+      TVG_RECRUITMENT_REPLY_TO: ${TVG_RECRUITMENT_REPLY_TO:-recruitment@thevipgroup.eu}
+      TVG_REPORTING_AI_PROVIDER: ${TVG_REPORTING_AI_PROVIDER:-disabled}
+      TVG_ONBOARDING_ZOHO_BACKEND: ${TVG_ONBOARDING_ZOHO_BACKEND:-tvg_onboarding.integrations.DisabledProvisioningProvider}
+      TVG_ONBOARDING_SELF_HOSTED_BACKEND: ${TVG_ONBOARDING_SELF_HOSTED_BACKEND:-tvg_onboarding.integrations.DisabledProvisioningProvider}
+      TVG_ERASMUS_SELF_HOSTED_SIGNING_BACKEND: ${TVG_ERASMUS_SELF_HOSTED_SIGNING_BACKEND:-tvg_erasmus.signing.DisabledSigningProvider}
+      TVG_ERASMUS_NA10_BACKEND: ${TVG_ERASMUS_NA10_BACKEND:-tvg_erasmus.integrations.DisabledExternalRequirementProvider}
+      TVG_VERIFICATION_SCANNER_BACKEND: ${TVG_VERIFICATION_SCANNER_BACKEND:-tvg_erasmus.scanning.DisabledScanner}
     volumes: !override
       - staticfiles:/app/staticfiles
       - media:/app/media
-    ports: !override
-      - "8000:8000"
+      - verification_private_media:/app/verification-private-media
+      - acceptance_private_media:/app/acceptance-private-media
+      - erasmus_document_private_media:/app/erasmus-document-private-media
+      - onboarding_private_media:/app/onboarding-private-media
+      - reporting_private_media:/app/reporting-private-media
+      - offboarding_private_media:/app/offboarding-private-media
+    # PeopleOps is reachable only through nginx/the controlled tunnel in
+    # production. Do not publish Horilla directly on the host network: that
+    # would bypass hostname routing and the internal CareerHub API denial.
+    ports: !reset []
+
+  careerhub:
+    # Check the actual production Host/scheme and reject redirect-only health.
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import Request,urlopen; u='http://127.0.0.1:8000/health/'; r=urlopen(Request(u,headers={'Host':'career.thevipgroup.eu','X-Forwarded-Proto':'https'}),timeout=5); assert r.status==200 and r.url==u and r.read()==b'ok'"]
+    environment: !override
+      DEBUG: "0"
+      HORILLA_ENV: production
+      CAREERHUB_SECRET_KEY: ${CAREERHUB_SECRET_KEY:?Set CAREERHUB_SECRET_KEY in .env}
+      CAREERHUB_ALLOWED_HOSTS: career.thevipgroup.eu
+      CAREERHUB_CSRF_TRUSTED_ORIGINS: https://career.thevipgroup.eu
+      CAREERHUB_PUBLIC_BASE_URL: https://career.thevipgroup.eu
+      CAREERHUB_PEOPLEOPS_API_URL: http://web:8000/internal/careerhub/v1
+      CAREERHUB_INTERNAL_API_TOKEN: ${CAREERHUB_INTERNAL_API_TOKEN:?Set CAREERHUB_INTERNAL_API_TOKEN in .env}
+      CAREERHUB_IDENTITY_API_TOKEN: ${CAREERHUB_IDENTITY_API_TOKEN:?Set CAREERHUB_IDENTITY_API_TOKEN in .env}
+      CAREERHUB_APPLICATION_API_TOKEN: ${CAREERHUB_APPLICATION_API_TOKEN:?Set CAREERHUB_APPLICATION_API_TOKEN in .env}
+      CAREERHUB_VERIFICATION_API_TOKEN: ${CAREERHUB_VERIFICATION_API_TOKEN:?Set CAREERHUB_VERIFICATION_API_TOKEN in .env}
+      CAREERHUB_INTERVIEW_API_TOKEN: ${CAREERHUB_INTERVIEW_API_TOKEN:?Set CAREERHUB_INTERVIEW_API_TOKEN in .env}
+      CAREERHUB_ARRANGEMENT_API_TOKEN: ${CAREERHUB_ARRANGEMENT_API_TOKEN:?Set CAREERHUB_ARRANGEMENT_API_TOKEN in .env}
+      CAREERHUB_PRIVATE_MEDIA_ROOT: /app/careerhub-private-media
+      CAREERHUB_DB_HOST: careerhub_db
+      CAREERHUB_DB_PORT: "5432"
+      CAREERHUB_DB_NAME: ${CAREERHUB_POSTGRES_DB:-careerhub_db}
+      CAREERHUB_DB_USER: ${CAREERHUB_POSTGRES_USER:-careerhub_user}
+      CAREERHUB_DB_PASSWORD: ${CAREERHUB_POSTGRES_PASSWORD:?Set CAREERHUB_POSTGRES_PASSWORD in .env}
+      CAREERHUB_REDIS_HOST: careerhub_redis
+      CAREERHUB_REDIS_PORT: "6379"
+      CAREERHUB_REDIS_DB: "0"
+      CAREERHUB_REDIS_PASSWORD: ${CAREERHUB_REDIS_PASSWORD:?Set CAREERHUB_REDIS_PASSWORD in .env}
+      CAREERHUB_CONTACT_EMAIL: recruitment@thevipgroup.eu
+      CAREERHUB_PRIVACY_NOTICE_VERSION: ${CAREERHUB_PRIVACY_NOTICE_VERSION:?Set CAREERHUB_PRIVACY_NOTICE_VERSION in .env}
+      CAREERHUB_TRUSTED_PROXY_COUNT: ${CAREERHUB_TRUSTED_PROXY_COUNT:-1}
+      CAREERHUB_EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      CAREERHUB_EMAIL_HOST: ${CAREERHUB_EMAIL_HOST:?Set CAREERHUB_EMAIL_HOST in .env}
+      CAREERHUB_EMAIL_PORT: ${CAREERHUB_EMAIL_PORT:-587}
+      CAREERHUB_EMAIL_HOST_USER: ${CAREERHUB_EMAIL_HOST_USER:-recruitment@thevipgroup.eu}
+      CAREERHUB_EMAIL_HOST_PASSWORD: ${CAREERHUB_EMAIL_HOST_PASSWORD:?Set CAREERHUB_EMAIL_HOST_PASSWORD in .env}
+      CAREERHUB_EMAIL_USE_TLS: ${CAREERHUB_EMAIL_USE_TLS:-1}
+      CAREERHUB_DEFAULT_FROM_EMAIL: THEVIPGROUP Recruitment <recruitment@thevipgroup.eu>
+      CAREERHUB_SECURE_SSL_REDIRECT: "1"
+      GUNICORN_WORKERS: ${CAREERHUB_GUNICORN_WORKERS:-2}
+      GUNICORN_LOG_LEVEL: ${GUNICORN_LOG_LEVEL:-info}
+    volumes: !override
+      - staticfiles:/app/staticfiles:ro
+      - careerhub_private_media:/app/careerhub-private-media
+    ports: !reset []
+
+  peoplehub:
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json; from urllib.request import Request,urlopen; u='http://127.0.0.1:8000/health/'; r=urlopen(Request(u,headers={'Host':'people.thevipgroup.eu','X-Forwarded-Proto':'https'}),timeout=5); assert r.status==200 and r.url==u and json.load(r).get('service')=='peoplehub'"]
+    env_file:
+      - .env
+    environment: !override
+      DEBUG: "0"
+      HORILLA_ENV: production
+      DB_HOST: db
+      AXES_PROXY_COUNT: "1"
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      PEOPLEHUB_ALLOWED_HOSTS: people.thevipgroup.eu
+      PEOPLEHUB_CSRF_TRUSTED_ORIGINS: https://people.thevipgroup.eu
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      DB_INIT_PASSWORD: ${DB_INIT_PASSWORD:?Set DB_INIT_PASSWORD in .env}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL in .env}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-1}
+      TVG_LEGAL_EMPLOYER_ID: ${TVG_LEGAL_EMPLOYER_ID:?Set TVG_LEGAL_EMPLOYER_ID in .env}
+      TVG_PEOPLEHUB_SSO_PROVIDER: ${TVG_PEOPLEHUB_SSO_PROVIDER:-disabled}
+      TVG_PEOPLEHUB_AUTHENTIK_BACKEND: ${TVG_PEOPLEHUB_AUTHENTIK_BACKEND:-tvg_peoplehub.integrations.DisabledAuthentikProvider}
+      TVG_REPORTING_PRIVATE_MEDIA_ROOT: /app/reporting-private-media
+      TVG_OFFBOARDING_PRIVATE_MEDIA_ROOT: /app/offboarding-private-media
+      TVG_REPORTING_AI_PROVIDER: ${TVG_REPORTING_AI_PROVIDER:-disabled}
+      GUNICORN_WORKERS: ${PEOPLEHUB_GUNICORN_WORKERS:-2}
+      GUNICORN_LOG_LEVEL: ${GUNICORN_LOG_LEVEL:-info}
+    volumes: !override
+      - staticfiles:/app/staticfiles:ro
+      - reporting_private_media:/app/reporting-private-media
+      - offboarding_private_media:/app/offboarding-private-media
+    ports: !reset []
 
   # Single replica: see the comment on this service in docker-compose.yml.
   # Mirrors web's environment so both read the same .env, minus the HTTP-only
@@ -47,8 +168,34 @@ services:
       DB_INIT_PASSWORD: ${DB_INIT_PASSWORD:?Set DB_INIT_PASSWORD in .env}
       REDIS_URL: ${REDIS_URL:?Set REDIS_URL in .env}
       HORILLA_SKIP_RELEASE_TASKS: "1"
+      CAREERHUB_INTERNAL_API_ENABLED: "0"
+      CAREERHUB_IDENTITY_API_ENABLED: "0"
+      CAREERHUB_APPLICATION_API_ENABLED: "0"
+      CAREERHUB_VERIFICATION_API_ENABLED: "0"
+      CAREERHUB_INTERVIEW_API_ENABLED: "0"
+      CAREERHUB_ARRANGEMENT_API_ENABLED: "0"
+      TVG_LEGAL_EMPLOYER_ID: ${TVG_LEGAL_EMPLOYER_ID:?Set TVG_LEGAL_EMPLOYER_ID in .env}
+      TVG_AUTOMATION_ENABLED: ${TVG_AUTOMATION_ENABLED:-0}
+      TVG_AUTOMATION_ENVIRONMENT: production
+      TVG_ACTIVEPIECES_WEBHOOK_URL: ${TVG_ACTIVEPIECES_WEBHOOK_URL:-}
+      TVG_ACTIVEPIECES_OUTBOUND_SIGNING_SECRET: ${TVG_ACTIVEPIECES_OUTBOUND_SIGNING_SECRET:-}
+      TVG_ACTIVEPIECES_CALLBACK_SIGNING_SECRET: ${TVG_ACTIVEPIECES_CALLBACK_SIGNING_SECRET:-}
+      TVG_AUTOMATION_TRANSPORT_BACKEND: ${TVG_AUTOMATION_TRANSPORT_BACKEND:-tvg_automation.transport.DisabledActivepiecesTransport}
+      TVG_AUTOMATION_MAX_ATTEMPTS: ${TVG_AUTOMATION_MAX_ATTEMPTS:-5}
+      TVG_AUTOMATION_CALLBACK_MAX_SKEW_SECONDS: ${TVG_AUTOMATION_CALLBACK_MAX_SKEW_SECONDS:-300}
+      TVG_TRAINING_PROVIDER: ${TVG_TRAINING_PROVIDER:-disabled}
+      TVG_TRAINING_ACTIVEPIECES_BACKEND: ${TVG_TRAINING_ACTIVEPIECES_BACKEND:-tvg_training.integrations.DisabledTrainingProvider}
+      TVG_ANALYTICS_EXPORT_PROVIDER: ${TVG_ANALYTICS_EXPORT_PROVIDER:-disabled}
+      TVG_ANALYTICS_MIN_CELL_SIZE: ${TVG_ANALYTICS_MIN_CELL_SIZE:-5}
+      TVG_RECRUITMENT_FROM_EMAIL: recruitment@thevipgroup.eu
+      TVG_RECRUITMENT_REPLY_TO: ${TVG_RECRUITMENT_REPLY_TO:-recruitment@thevipgroup.eu}
+      TVG_REPORTING_PRIVATE_MEDIA_ROOT: /app/reporting-private-media
+      TVG_OFFBOARDING_PRIVATE_MEDIA_ROOT: /app/offboarding-private-media
+      TVG_REPORTING_AI_PROVIDER: ${TVG_REPORTING_AI_PROVIDER:-disabled}
     volumes: !override
       - media:/app/media
+      - reporting_private_media:/app/reporting-private-media
+      - offboarding_private_media:/app/offboarding-private-media
     deploy:
       replicas: 1
 
@@ -67,6 +214,24 @@ services:
           "redis-cli",
           "-a",
           "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}",
+          "ping",
+        ]
+
+  careerhub_db:
+    environment:
+      POSTGRES_DB: ${CAREERHUB_POSTGRES_DB:-careerhub_db}
+      POSTGRES_USER: ${CAREERHUB_POSTGRES_USER:-careerhub_user}
+      POSTGRES_PASSWORD: ${CAREERHUB_POSTGRES_PASSWORD:?Set CAREERHUB_POSTGRES_PASSWORD in .env}
+
+  careerhub_redis:
+    command: redis-server --appendonly yes --requirepass ${CAREERHUB_REDIS_PASSWORD:?Set CAREERHUB_REDIS_PASSWORD in .env}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "${CAREERHUB_REDIS_PASSWORD:?Set CAREERHUB_REDIS_PASSWORD in .env}",
           "ping",
         ]
 

@@ -1,0 +1,166 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section portal-section">
+  <div class="shell">
+    <div class="portal-heading">
+      <div><p class="eyebrow">CANDIDATE DASHBOARD</p><h1>Welcome, {{ request.user.first_name }}.</h1><p>One private view of your applications across THEVIPGROUP ventures.</p></div>
+      <form method="post" action="{% url 'careerhub:candidate-logout' %}">{% csrf_token %}<button class="button button-quiet" type="submit">Sign out</button></form>
+    </div>
+    {% include 'careerhub/accounts/partials/portal_nav.html' %}
+    {% if request.GET.submitted %}<div class="status-panel status-panel-success" role="status"><strong>Application submitted</strong><span>Your submission-time profile and documents are now fixed for that application.</span></div>{% endif %}
+    {% if request.GET.withdrawn %}<div class="notice" role="status">Your application was withdrawn.</div>{% endif %}
+    {% if request.GET.verification %}<div class="status-panel status-panel-success" role="status"><strong>Document submitted</strong><span>Your document is private and will be reviewed after malware scanning.</span></div>{% endif %}
+    {% if request.GET.interview == 'booked' %}<div class="status-panel status-panel-success" role="status"><strong>Interview booked</strong><span>Your confirmation shows both Europe/Warsaw and your selected local timezone.</span></div>{% endif %}
+    {% if request.GET.interview == 'rescheduled' %}<div class="status-panel status-panel-success" role="status"><strong>Interview rescheduled</strong><span>Your one candidate-requested reschedule has been recorded.</span></div>{% endif %}
+    {% if request.GET.arrangement == 'confirmed' %}<div class="status-panel status-panel-success" role="status"><strong>Internship dates confirmed</strong><span>HR will review the complete arrangements before any acceptance letter is issued.</span></div>{% endif %}
+    {% if request.GET.acceptance == 'received' %}<div class="status-panel status-panel-success" role="status"><strong>Receipt confirmed</strong><span>Your acceptance record is complete and can proceed to the Learning Agreement stage.</span></div>{% endif %}
+    {% if status_unavailable %}<div class="notice" role="status">Live status updates are temporarily unavailable. The last confirmed candidate-safe status is shown.</div>{% endif %}
+
+    <section class="portal-panel" id="applications">
+      <div class="portal-panel-heading"><div><p class="eyebrow">MY APPLICATIONS</p><h2>Applications</h2></div><a class="button button-secondary" href="{% url 'careerhub:opportunities' %}">Find opportunities</a></div>
+      <div class="application-list">
+        {% for application in applications %}
+          <article class="application-row">
+            <div><span class="venture-label">{{ application.venture_name }}</span><h3>{{ application.opening_title }}</h3><p>{% if application.submitted_at %}Submitted {{ application.submitted_at|date:"d M Y" }}{% else %}Draft started {{ application.created_at|date:"d M Y" }}{% endif %}</p></div>
+            <div class="application-state"><span class="status status-{{ application.friendly_status_code }}">{{ application.friendly_status_label }}</span>
+              {% if application.state == 'draft' %}<a class="text-link" href="{% url 'careerhub:candidate-application-create' application.venture_slug application.opening_slug %}">Continue draft</a>{% endif %}
+            </div>
+            {% if application.state != 'draft' %}
+              <details class="application-history"><summary>Candidate-visible history</summary><ol>{% for event in application.status_events.all reversed %}<li><strong>{{ event.label }}</strong><span>{{ event.occurred_at|date:"d M Y, H:i" }}</span></li>{% endfor %}</ol></details>
+              <div class="application-actions"><a href="{% url 'careerhub:candidate-application-document' application.pk 'cv' %}">Submitted CV</a>{% if application.cover_letter_snapshot %}<a href="{% url 'careerhub:candidate-application-document' application.pk 'cover-letter' %}">Submitted cover letter</a>{% endif %}{% if application.state == 'submitted' %}<form method="post" action="{% url 'careerhub:candidate-application-withdraw' application.pk %}">{% csrf_token %}<button class="text-button-danger" type="submit">Withdraw application</button></form>{% endif %}</div>
+            {% endif %}
+          </article>
+        {% empty %}<div class="empty-state"><h3>No applications yet</h3><p>Your drafts and submitted applications will appear here.</p></div>{% endfor %}
+      </div>
+    </section>
+
+    <section class="portal-panel" id="verification">
+      <p class="eyebrow">PRE-INTERVIEW VERIFICATION</p><h2>Verification</h2>
+      <div class="application-list">
+        {% for item in verifications %}
+          <article class="application-row">
+            <div><span class="venture-label">{{ item.application.venture_name }}</span><h3>{{ item.application.opening_title }}</h3><p><strong>{{ item.verification.label }}</strong> — {{ item.verification.next_action }}</p>{% if item.verification.due_at %}<p>Requested by {{ item.verification.due_at|date:"d M Y" }}</p>{% endif %}</div>
+            <div class="compact-list">
+              {% for requirement in item.verification.requirements %}
+                <article><strong>{{ requirement.title }}</strong><span>{{ requirement.status_label }}</span><p>{{ requirement.instructions }}</p>{% if requirement.revision_reason %}<p role="alert">{{ requirement.revision_reason }}</p>{% endif %}
+                  {% if requirement.accepting_upload %}
+                    <form method="post" enctype="multipart/form-data" action="{% url 'careerhub:candidate-verification-upload' item.application.pk requirement.id %}">{% csrf_token %}<label for="verification-{{ requirement.id }}">Private document ({{ requirement.allowed_formats|join:", "|upper }}, max {{ requirement.max_size_mb }} MB)</label><input id="verification-{{ requirement.id }}" name="document" type="file" required><button class="button button-secondary" type="submit">Upload securely</button></form>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            </div>
+          </article>
+        {% empty %}<p>No verification action is currently required.</p>{% endfor %}
+      </div>
+    </section>
+
+    <div class="portal-grid">
+      <section class="portal-panel" id="profile"><p class="eyebrow">MY PROFILE</p><h2>Reusable profile</h2><p>Update contact, study, language, availability and Erasmus+ details without changing earlier submissions.</p><a class="text-link" href="{% url 'careerhub:candidate-profile' %}">Manage profile →</a></section>
+      <section class="portal-panel" id="documents"><p class="eyebrow">MY DOCUMENTS</p><h2>CV &amp; cover letter</h2><p>Keep reusable PDF documents ready for future applications.</p><a class="text-link" href="{% url 'careerhub:candidate-documents' %}">Manage documents →</a></section>
+    </div>
+
+    <section class="portal-panel" id="interviews">
+      <p class="eyebrow">MY INTERVIEWS</p><h2>Interviews</h2>
+      <div class="compact-list">
+        {% for interview in interviews %}
+          <article>
+            <strong>{{ interview.application.opening_title }} — {{ interview.type }}</strong>
+            <span>{{ interview.status|title }} · company timezone {{ interview.company_timezone }} · your timezone {{ interview.candidate_timezone }}</span>
+            {% if interview.instructions %}<p>{{ interview.instructions }}</p>{% endif %}
+            {% if interview.booking %}
+              <p><strong>Your local time:</strong> {{ interview.booking.candidate_display }} ({{ interview.booking.candidate_timezone }})</p>
+              <p><strong>Company time:</strong> {{ interview.booking.company_display }} ({{ interview.booking.company_timezone }})</p>
+              {% if interview.booking.meeting_link %}<p><a class="text-link" href="{{ interview.booking.meeting_link }}" rel="noopener noreferrer">Open secure meeting link</a></p>{% endif %}
+              {% if interview.booking.can_reschedule and interview.available_slots %}
+                <form method="post" action="{% url 'careerhub:candidate-interview-reschedule' interview.application.pk interview.id %}">
+                  {% csrf_token %}
+                  <label for="reschedule-slot-{{ interview.id }}">Replacement time</label>
+                  <select id="reschedule-slot-{{ interview.id }}" name="slot_id" required>
+                    {% for slot in interview.available_slots %}<option value="{{ slot.slot_id }}">{{ slot.candidate_display }} ({{ slot.candidate_timezone }}) / {{ slot.company_display }} ({{ slot.company_timezone }})</option>{% endfor %}
+                  </select>
+                  <label for="reschedule-timezone-{{ interview.id }}">Your IANA timezone</label>
+                  <input id="reschedule-timezone-{{ interview.id }}" name="candidate_timezone" value="{{ interview.candidate_timezone }}" required>
+                  <p>One candidate-requested reschedule is allowed with at least {{ interview.booking.reschedule_notice_hours }} hours' notice.</p>
+                  <button class="button button-secondary" type="submit">Reschedule once</button>
+                </form>
+              {% endif %}
+            {% elif interview.status == 'invited' %}
+              <form method="post" action="{% url 'careerhub:candidate-interview-book' interview.application.pk interview.id %}">
+                {% csrf_token %}
+                <label for="booking-slot-{{ interview.id }}">Available time</label>
+                <select id="booking-slot-{{ interview.id }}" name="slot_id" required>
+                  {% for slot in interview.available_slots %}<option value="{{ slot.slot_id }}">{{ slot.candidate_display }} ({{ slot.candidate_timezone }}) / {{ slot.company_display }} ({{ slot.company_timezone }})</option>{% endfor %}
+                </select>
+                <label for="booking-timezone-{{ interview.id }}">Your IANA timezone</label>
+                <input id="booking-timezone-{{ interview.id }}" name="candidate_timezone" value="{{ interview.candidate_timezone }}" aria-describedby="booking-timezone-help-{{ interview.id }}" required>
+                <p id="booking-timezone-help-{{ interview.id }}">Examples: Europe/Paris, Europe/Warsaw, America/Toronto.</p>
+                <button class="button button-secondary" type="submit">Confirm interview time</button>
+              </form>
+            {% endif %}
+          </article>
+        {% empty %}<p>No candidate-visible interviews are scheduled.</p>{% endfor %}
+      </div>
+    </section>
+    <section class="portal-panel" id="arrangements">
+      <p class="eyebrow">ERASMUS+ ARRANGEMENTS</p><h2>Selected-candidate arrangements</h2>
+      <div class="compact-list">
+        {% for item in arrangements %}
+          <article>
+            <strong>{{ item.application.opening_title }}</strong>
+            <span>{{ item.arrangement.arrangement_status_label }} · acceptance {{ item.arrangement.acceptance_status_label }}</span>
+            <p>{{ item.arrangement.university }} · {{ item.arrangement.programme }}</p>
+            <p>Proposed dates: {{ item.arrangement.proposed_start_date }} to {{ item.arrangement.proposed_end_date }} · {{ item.arrangement.working_model }} at {{ item.arrangement.work_location }}</p>
+            {% if item.arrangement.outstanding_requirements %}<div class="notice"><strong>Before approval:</strong><ul>{% for requirement in item.arrangement.outstanding_requirements %}<li>{{ requirement }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if item.arrangement.can_confirm_dates %}
+              <form method="post" action="{% url 'careerhub:candidate-arrangement-confirm-dates' item.application.pk item.arrangement.id %}">
+                {% csrf_token %}
+                <label for="arrangement-start-{{ item.arrangement.id }}">Confirmed start date</label>
+                <input id="arrangement-start-{{ item.arrangement.id }}" name="start_date" type="date" value="{{ item.arrangement.confirmed_start_date|default:item.arrangement.proposed_start_date }}" required>
+                <label for="arrangement-end-{{ item.arrangement.id }}">Confirmed end date</label>
+                <input id="arrangement-end-{{ item.arrangement.id }}" name="end_date" type="date" value="{{ item.arrangement.confirmed_end_date|default:item.arrangement.proposed_end_date }}" required>
+                <button class="button button-secondary" type="submit">Confirm these dates</button>
+              </form>
+            {% elif item.arrangement.confirmed_start_date %}<p>Confirmed dates: {{ item.arrangement.confirmed_start_date }} to {{ item.arrangement.confirmed_end_date }} ({{ item.arrangement.internship_duration_days }} days)</p>{% endif %}
+            {% for letter in item.arrangement.letters %}
+              <div class="status-panel"><strong>Acceptance letter {{ letter.letter_number }} · version {{ letter.version }}</strong><span>Issued {{ letter.issue_date }} · {{ letter.status_label }}</span>
+                {% if letter.downloadable %}<a class="text-link" href="{% url 'careerhub:candidate-acceptance-download' item.application.pk item.arrangement.id letter.id %}">Download private PDF</a>{% endif %}
+                {% if letter.can_confirm_receipt %}<form method="post" action="{% url 'careerhub:candidate-acceptance-receipt' item.application.pk item.arrangement.id letter.id %}">{% csrf_token %}<button class="button button-secondary" type="submit">Confirm receipt</button></form>{% endif %}
+              </div>
+            {% endfor %}
+            {% if item.arrangement.learning_agreement_ready %}<p><strong>Next step:</strong> your accepted arrangements are ready for the Learning Agreement stage.</p>{% endif %}
+          </article>
+        {% empty %}<p>No selected-candidate arrangements are currently awaiting your action.</p>{% endfor %}
+      </div>
+    </section>
+    <section class="portal-panel" id="erasmus-documentation">
+      <p class="eyebrow">ERASMUS+ DOCUMENTATION</p><h2>Learning Agreement and required documents</h2>
+      <div class="compact-list">
+        {% for item in documentation %}
+          <article>
+            <strong>{{ item.application.opening_title }}</strong>
+            {% if item.documentation.before_mobility_complete %}<span>Before Mobility documentation complete</span>{% endif %}
+            {% for document in item.documentation.documents %}
+              <div class="status-panel">
+                <strong>{{ document.title }}{% if document.required %} · required{% else %} · optional{% endif %}</strong>
+                <span>{{ document.status_label }} · {{ document.phase }}</span>
+                {% if document.instructions %}<p>{{ document.instructions }}</p>{% endif %}
+                {% if document.revision_reason %}<p><strong>Revision requested:</strong> {{ document.revision_reason }}</p>{% endif %}
+                {% if document.remaining_signer_roles %}<p>Remaining signatures: {{ document.remaining_signer_roles|join:", " }}</p>{% endif %}
+                {% if document.can_upload %}<form method="post" enctype="multipart/form-data" action="{% url 'careerhub:candidate-erasmus-document-upload' item.application.pk item.documentation.case_id document.id %}">{% csrf_token %}<label for="erasmus-document-{{ document.id }}">PDF or DOCX</label><input id="erasmus-document-{{ document.id }}" name="document" type="file" accept=".pdf,.docx" required><button class="button button-secondary" type="submit">Submit document</button></form>{% endif %}
+                {% for version in document.versions %}<a class="text-link" href="{% url 'careerhub:candidate-erasmus-document-download' item.application.pk item.documentation.case_id document.id version.id %}">Download version {{ version.number }}</a>{% endfor %}
+              </div>
+            {% endfor %}
+            {% if item.documentation.accommodation_question %}
+              <form method="post" action="{% url 'careerhub:candidate-accommodation-response' item.application.pk item.documentation.case_id %}">{% csrf_token %}<fieldset><legend>{{ item.documentation.accommodation_question }}</legend><label><input type="radio" name="needs_assistance" value="yes" required> Yes</label><label><input type="radio" name="needs_assistance" value="no" required> No</label></fieldset><button class="button button-secondary" type="submit">Save response</button></form>
+            {% endif %}
+          </article>
+        {% empty %}<p>Erasmus+ documentation will appear after the acceptance workflow is complete and HR opens the Learning Agreement stage.</p>{% endfor %}
+      </div>
+    </section>
+    <section class="portal-panel" id="offers"><p class="eyebrow">MY OFFERS</p><h2>Offers</h2><div class="compact-list">{% for offer in offers %}<article><strong>{{ offer.application.opening_title }}</strong><span>{{ offer.status }}</span></article>{% empty %}<p>No offers are currently available.</p>{% endfor %}</div></section>
+    <section class="portal-panel" id="onboarding"><p class="eyebrow">MY ONBOARDING</p><h2>Onboarding</h2><div class="compact-list">{% for item in onboarding %}<article><strong>{{ item.application.opening_title }}</strong><span>{{ item.status }} · {{ item.completed_tasks }}/{{ item.total_tasks }} tasks complete</span></article>{% empty %}<p>Onboarding has not started.</p>{% endfor %}</div></section>
+    <section class="portal-panel" id="notifications"><p class="eyebrow">NOTIFICATIONS</p><h2>Updates</h2><div class="compact-list">{% for item in notifications %}<article><strong>{{ item.application.opening_title }}</strong><span>{{ item.message }}</span></article>{% empty %}<p>No notifications.</p>{% endfor %}</div></section>
+  </div>
+</section>
+{% endblock %}

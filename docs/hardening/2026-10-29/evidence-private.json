@@ -1,0 +1,20 @@
+{
+  "run_at_utc": "2026-10-30T10:39:40.738394+00:00",
+  "runtime": "private",
+  "schema": false,
+  "python": "3.12.16",
+  "django": "5.2.18",
+  "database": "isolated in-memory SQLite",
+  "mail": "local-memory only",
+  "elapsed_seconds": 84.43,
+  "exit_code": 0,
+  "summary": [
+    "System check identified no issues (0 silenced).",
+    "System check identified no issues (0 silenced).",
+    "Found 265 test(s).",
+    "System check identified no issues (0 silenced).",
+    "Ran 265 tests in 63.362s",
+    "OK"
+  ],
+  "djangorestframework": "3.18.3"
+}

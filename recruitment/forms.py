@@ -413,7 +413,7 @@ class CandidateCreationForm(BaseModelForm):
         self.fields["source"].initial = "software"
         self.fields["profile"].widget.attrs["accept"] = ".jpg, .jpeg, .png"
         self.fields["profile"].required = False
-        self.fields["resume"].widget.attrs["accept"] = ".pdf"
+        self.fields["resume"].widget.attrs["accept"] = ".pdf,.docx"
         self.fields["resume"].required = False
         if self.instance.recruitment_id is not None:
             if self.instance is not None:
@@ -558,7 +558,7 @@ class ApplicationForm(RegistrationForm):
         request = getattr(_thread_locals, "request", None)
         self.fields["profile"].widget.attrs["accept"] = ".jpg, .jpeg, .png"
         self.fields["profile"].required = False
-        self.fields["resume"].widget.attrs["accept"] = ".pdf"
+        self.fields["resume"].widget.attrs["accept"] = ".pdf,.docx"
         self.fields["resume"].required = False
 
         self.fields["recruitment_id"].queryset = self.active_recruitment
@@ -1389,6 +1389,17 @@ class ScheduleInterviewForm(BaseModelForm):
             self.add_error(
                 "employee_id", _(f"{employees} have approved leave on this date")
             )
+
+        candidate = cleaned_data.get("candidate_id")
+        if candidate:
+            try:
+                from tvg_erasmus.services import (
+                    validate_candidate_interview_eligibility,
+                )
+
+                validate_candidate_interview_eligibility(candidate)
+            except ValidationError as exc:
+                self.add_error("candidate_id", exc)
 
         return cleaned_data
 

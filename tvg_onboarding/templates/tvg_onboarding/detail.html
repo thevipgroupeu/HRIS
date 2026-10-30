@@ -1,0 +1,32 @@
+{% extends "index.html" %}
+{% block content %}
+<main class="oh-wrapper">
+  <h1>{{ onboarding.intern_id }}</h1>
+  <p>{{ onboarding.person }} · {{ onboarding.get_status_display }} · {{ onboarding.start_date }} – {{ onboarding.end_date }}</p>
+  {% if onboarding.status == 'pending_approval' %}
+  <form method="post" action="{% url 'tvg_onboarding:approve' onboarding.public_id %}">{% csrf_token %}<button type="submit">Approve onboarding</button></form>
+  {% endif %}
+  <h2>Checklist</h2>
+  <ul>
+    {% for item in onboarding.checklist_items.all %}
+    <li>{{ item.native_task.onboarding_task_id.task_title }} — {{ item.native_task.get_status_display }}
+      {% if item.native_task.status != 'done' %}<form method="post" action="{% url 'tvg_onboarding:complete-task' onboarding.public_id item.code %}">{% csrf_token %}<input name="evidence_note" required maxlength="255"><button type="submit">Complete</button></form>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <h2>Company account</h2>
+  <form method="post" action="{% url 'tvg_onboarding:provision-manual' onboarding.public_id %}">{% csrf_token %}<input type="email" name="work_email" required placeholder="Confirmed work email"><input name="external_reference" placeholder="Non-secret reference"><button type="submit">Record manual provisioning</button></form>
+  {% if not onboarding.employee_id %}<form method="post" action="{% url 'tvg_onboarding:convert' onboarding.public_id %}">{% csrf_token %}<input name="phone" placeholder="Confirmed phone"><button type="submit">Create employee record</button></form>{% endif %}
+  <h2>Approved access</h2>
+  <form method="post" action="{% url 'tvg_onboarding:grant-access' onboarding.public_id %}">{% csrf_token %}<select name="profile_id">{% for profile in access_profiles %}<option value="{{ profile.pk }}">{{ profile.name }}</option>{% endfor %}</select><button type="submit">Assign access</button></form>
+  <h2>Equipment</h2>
+  <form method="post" action="{% url 'tvg_onboarding:allocate' onboarding.public_id %}">{% csrf_token %}<select name="asset_id">{% for asset in assets %}<option value="{{ asset.pk }}">{{ asset }}</option>{% endfor %}</select><button type="submit">Allocate</button></form>
+  {% for allocation in onboarding.asset_allocations.all %}
+    <p>{{ allocation.native_assignment.asset_id }} — {{ allocation.get_acknowledgment_status_display }}</p>
+    <form method="post" action="{% url 'tvg_onboarding:prepare-acknowledgment' onboarding.public_id allocation.public_id %}">{% csrf_token %}<select name="template_id">{% for template in asset_templates %}<option value="{{ template.pk }}">{{ template.name }} v{{ template.version_number }}</option>{% endfor %}</select><button type="submit">Prepare acknowledgment</button></form>
+    {% if allocation.pdf_file %}<a href="{% url 'tvg_onboarding:download-acknowledgment' onboarding.public_id allocation.public_id %}">Controlled download</a>{% endif %}
+    <form method="post" action="{% url 'tvg_onboarding:acknowledge-asset' onboarding.public_id allocation.public_id %}">{% csrf_token %}<input name="reference" placeholder="Acknowledgment reference"><button type="submit">Record acknowledgment</button></form>
+  {% endfor %}
+  <form method="post" action="{% url 'tvg_onboarding:finish' onboarding.public_id %}">{% csrf_token %}<button type="submit">Mark intern onboarded</button></form>
+</main>
+{% endblock %}

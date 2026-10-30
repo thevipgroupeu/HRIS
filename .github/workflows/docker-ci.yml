@@ -30,6 +30,13 @@ jobs:
           set -e
           docker compose -f "$COMPOSE_FILE" build web
 
+      - name: Verify immutable image contents and runtime
+        run: |
+          set -e
+          IMAGE=$(docker compose -f "$COMPOSE_FILE" images -q web | head -n1)
+          test -n "$IMAGE"
+          python scripts/check_tvg_image.py "$IMAGE" --report image-contract.json
+
       - name: Ensure local_settings exists
         run: |
           if [ ! -f horilla/settings/local_settings.py ]; then
@@ -142,3 +149,10 @@ jobs:
         run: |
           docker compose -f "$COMPOSE_FILE" --profile production down -v --remove-orphans || true
           docker compose -f "$COMPOSE_FILE" down -v --remove-orphans || true
+
+      - name: Upload image contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tvg-image-contract
+          path: image-contract.json

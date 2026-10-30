@@ -1,0 +1,3 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}{{ member.name }}{% endblock %}
+{% block content %}<div class="card"><h1>{{ member.name }}</h1><p><strong>Company email:</strong> {{ member.company_email }}</p><p><strong>Position:</strong> {{ member.position }}</p><p><strong>Department:</strong> {{ member.department }}</p><p><strong>Venture:</strong> {{ member.venture|default:"Not assigned" }}</p><p><strong>Manager:</strong> {{ member.manager|default:"Not assigned" }}</p><p><strong>Work location:</strong> {{ member.work_location }}</p></div>{% endblock %}

@@ -57,6 +57,14 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
+
+# THEVIPGROUP runtime stores and operator credentials must never enter Git.
+*-private-media/
+backups/
+secrets/
+credentials/
+.env.*
+!.env.dist
 *.sqlite3
 *.sqlite3-journal
 *.sqlite3-wal

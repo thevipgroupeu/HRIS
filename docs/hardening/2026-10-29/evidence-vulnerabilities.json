@@ -1,0 +1,13 @@
+{
+  "run_at_utc": "2026-10-30T10:40:11.235371+00:00",
+  "scope": "Trivy 0.58.1 local-image vulnerability scan; HIGH/CRITICAL, fixable findings only; application not started",
+  "requested_image": "tvg-peopleops-readiness:2026-10-30",
+  "image_id": "sha256:0026b92a5d6bfacabebdada31cb48dcd4612d0a32ddad1e06c490bccae699cc3",
+  "os": {
+    "Family": "debian",
+    "Name": "13.7"
+  },
+  "finding_count": 0,
+  "findings": [],
+  "passed": true
+}

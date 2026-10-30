@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-28",
+  "scope": "isolated settings execution, not deployed settings",
+  "checks": [
+    {
+      "check": "reject_short_private_secret",
+      "passed": false
+    },
+    {
+      "check": "reject_mixed_wildcard_hosts",
+      "passed": false
+    },
+    {
+      "check": "reject_production_careerhub_debug",
+      "passed": false,
+      "secure_session_cookie": false
+    }
+  ],
+  "passed": false
+}

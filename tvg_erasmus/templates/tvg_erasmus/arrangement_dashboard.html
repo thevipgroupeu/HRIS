@@ -1,0 +1,71 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<main class="oh-wrapper">
+  <div class="oh-main__topbar"><div class="oh-main__titlebar-title"><h1>Selected-candidate arrangements</h1><p>Human-approved Erasmus+ arrangements and acceptance-letter history.</p></div></div>
+
+  {% if messages %}{% for message in messages %}<div class="oh-alert-container"><div class="oh-alert oh-alert--{{ message.tags }}">{{ message }}</div></div>{% endfor %}{% endif %}
+
+  <section class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
+    <h2>Selected applications awaiting a case</h2>
+    {% for application in selected_applications %}
+      <article class="oh-card-dashboard oh-card-dashboard--no-scale">
+        <h3>{{ application.candidate.name }} — {{ application.opening.title }}</h3>
+        <p>{{ application.opening.venture.name }} · {{ application.opening.recruitment.company_id }}</p>
+        <a class="oh-btn oh-btn--secondary" href="{% url 'tvg_erasmus:arrangement-edit' application.public_id %}">Create Erasmus case</a>
+      </article>
+    {% empty %}<p>No selected applications are waiting for an Erasmus case.</p>{% endfor %}
+  </section>
+
+  <section class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
+    <h2>Arrangement cases</h2>
+    {% for case in cases %}
+      <article class="oh-card-dashboard oh-card-dashboard--no-scale" style="margin-bottom:1rem">
+        <h3>{{ case.candidate.name }} — {{ case.application.opening.title }}</h3>
+        <p><strong>Arrangements:</strong> {{ case.get_arrangement_status_display }} · <strong>Acceptance:</strong> {{ case.get_acceptance_status_display }}</p>
+        <p>{{ case.university }} · {{ case.programme }} · {{ case.get_working_model_display }} at {{ case.work_location }}</p>
+        <p>Proposed {{ case.proposed_start_date }} to {{ case.proposed_end_date }}{% if case.confirmed_start_date %}; candidate confirmed {{ case.confirmed_start_date }} to {{ case.confirmed_end_date }} ({{ case.internship_duration_days }} days){% endif %}</p>
+        {% if case.outstanding_requirements %}<div class="oh-alert oh-alert--warning"><strong>Outstanding:</strong><ul>{% for item in case.outstanding_requirements %}<li>{{ item }}</li>{% endfor %}</ul></div>{% endif %}
+
+        {% if not case.approved_at %}<a class="oh-btn oh-btn--secondary" href="{% url 'tvg_erasmus:arrangement-edit' case.application.public_id %}">Edit proposal</a>{% endif %}
+
+        {% if case.candidate_confirmed_at and not case.approved_at %}
+          <form method="post" action="{% url 'tvg_erasmus:duration-exception-request' case.public_id %}" style="margin-top:1rem">{% csrf_token %}
+            <label for="exception-reason-{{ case.public_id }}">Short-duration exception reason</label>
+            <textarea id="exception-reason-{{ case.public_id }}" name="reason" rows="3"></textarea>
+            <button class="oh-btn oh-btn--secondary" type="submit">Request authorized exception</button>
+          </form>
+          <form method="post" action="{% url 'tvg_erasmus:arrangement-approve' case.public_id %}" style="margin-top:.75rem">{% csrf_token %}<button class="oh-btn oh-btn--success" type="submit">Approve confirmed arrangements</button></form>
+        {% endif %}
+
+        {% for exception in case.duration_exceptions.all %}
+          <div style="margin-top:1rem"><strong>Duration exception v{{ exception.version_number }}:</strong> {{ exception.get_status_display }}
+          {% if exception.status == 'pending' %}<form method="post" action="{% url 'tvg_erasmus:duration-exception-decision' exception.public_id %}">{% csrf_token %}<select name="decision"><option value="approved">Approve exception</option><option value="rejected">Reject exception</option></select><textarea name="note" rows="2" placeholder="Decision note"></textarea><button class="oh-btn oh-btn--secondary" type="submit">Record decision</button></form>{% endif %}</div>
+        {% endfor %}
+
+        {% if case.approved_at %}
+          <form method="post" action="{% url 'tvg_erasmus:acceptance-issue' case.public_id %}" style="margin-top:1rem">{% csrf_token %}
+            <label for="template-{{ case.public_id }}">Approved company template</label>
+            <select id="template-{{ case.public_id }}" name="template" required>{% for template in templates %}{% if template.company_id == case.application.opening.venture.legal_employer_id and template.approved_at %}<option value="{{ template.pk }}">{{ template.name }} v{{ template.version_number }}</option>{% endif %}{% endfor %}</select>
+            <label for="issue-date-{{ case.public_id }}">Issue date</label><input id="issue-date-{{ case.public_id }}" type="date" name="issue_date" value="{% now 'Y-m-d' %}" required>
+            <button class="oh-btn oh-btn--success" type="submit">Authorize and issue new version</button>
+          </form>
+        {% endif %}
+
+        {% for letter in case.acceptance_letters.all %}
+          <div style="margin-top:1rem"><strong>{{ letter.letter_number }} · v{{ letter.document_version }}</strong> · {{ letter.get_status_display }} · issued {{ letter.issue_date }}
+            <a href="{% url 'tvg_erasmus:acceptance-download' letter.public_id %}">Download private PDF</a>
+            {% if letter.status == 'issued' %}<form method="post" action="{% url 'tvg_erasmus:acceptance-send' letter.public_id %}" style="display:inline">{% csrf_token %}<button class="oh-btn oh-btn--secondary" type="submit">Authorize candidate delivery</button></form>{% endif %}
+          </div>
+        {% endfor %}
+      </article>
+    {% empty %}<p>No Erasmus arrangement cases exist.</p>{% endfor %}
+  </section>
+
+  <section class="oh-card-dashboard oh-card-dashboard--no-scale oh-card-dashboard--transparent">
+    <h2>Company-authored acceptance templates</h2>
+    <p>Template text and legal/signatory fields are authored in Django administration. Approval locks the version permanently; edits require a new version.</p>
+    {% for template in templates %}<article class="oh-card-dashboard oh-card-dashboard--no-scale"><strong>{{ template.name }} v{{ template.version_number }}</strong> · {{ template.company }}{% if template.approved_at %} · approved{% else %}<form method="post" action="{% url 'tvg_erasmus:acceptance-template-approve' template.public_id %}" style="display:inline">{% csrf_token %}<button class="oh-btn oh-btn--secondary" type="submit">Approve and lock</button></form>{% endif %}</article>{% empty %}<p>No acceptance templates are configured. Add explicit legal and signatory data in administration.</p>{% endfor %}
+  </section>
+</main>
+{% endblock %}

@@ -28,6 +28,10 @@ echo "PostgreSQL is ready!"
 SECRET_KEY_FILE="/app/media/.generated_secret_key"
 case "${SECRET_KEY:-}" in
   ""|"django-insecure-default-key"|"dev-secret-key-change-in-production"|"django-insecure-j8op9)1q8\$1&0^s&p*_0%d#pr@w9qj@1o=3#@d=a(^@9@zd@%j"|change-me*|django-insecure-*)
+    if [ "${HORILLA_ENV:-}" = "production" ]; then
+      echo "ERROR: Configure a strong production SECRET_KEY; automatic generation is disabled." >&2
+      exit 1
+    fi
     if [ -f "$SECRET_KEY_FILE" ]; then
       SECRET_KEY="$(cat "$SECRET_KEY_FILE")"
       echo "Using previously generated SECRET_KEY from $SECRET_KEY_FILE"
@@ -65,8 +69,8 @@ fi
 # scheduler service, which starts alongside web. Two containers racing `migrate`
 # can deadlock on the same DDL, and `collectstatic --clear` (below) would wipe
 # STATIC_ROOT out from under a web container already serving from it.
-if [ "${HORILLA_SKIP_RELEASE_TASKS:-0}" = "1" ]; then
-  echo "HORILLA_SKIP_RELEASE_TASKS=1 -- skipping migrate and collectstatic."
+if [ "${HORILLA_SKIP_RELEASE_TASKS:-0}" = "1" ] || [ "${HORILLA_ENV:-}" = "production" ]; then
+  echo "Skipping automatic migrate and collectstatic; production release tasks require a separate reviewed run."
   echo "Starting server..."
   exec "$@"
 fi

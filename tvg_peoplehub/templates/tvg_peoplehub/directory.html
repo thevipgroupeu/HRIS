@@ -1,0 +1,5 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Company directory{% endblock %}
+{% block content %}<h1>Company directory</h1><p class="muted">Only approved work-directory fields are shown.</p>
+<table><thead><tr><th>Name</th><th>Company email</th><th>Position</th><th>Department</th><th>Venture</th><th>Manager</th><th>Work location</th></tr></thead>
+<tbody>{% for row in directory_rows %}<tr><td>{{ row.name }}</td><td>{{ row.company_email }}</td><td>{{ row.position }}</td><td>{{ row.department }}</td><td>{{ row.venture }}</td><td>{{ row.manager }}</td><td>{{ row.work_location }}</td></tr>{% empty %}<tr><td colspan="7">No directory entries.</td></tr>{% endfor %}</tbody></table>{% endblock %}

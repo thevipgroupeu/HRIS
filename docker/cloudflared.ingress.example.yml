@@ -1,0 +1,13 @@
+# Merge with the operator's existing tunnel configuration after staging review.
+# Supply tunnel identity/credentials outside Git. This is not a runnable secret.
+# Requires a same-host cloudflared process and docker-compose.tunnel.yml.
+ingress:
+  - hostname: career.thevipgroup.eu
+    service: http://127.0.0.1:8080
+    originRequest:
+      httpHostHeader: career.thevipgroup.eu
+  - hostname: people.thevipgroup.eu
+    service: http://127.0.0.1:8080
+    originRequest:
+      httpHostHeader: people.thevipgroup.eu
+  - service: http_status:404

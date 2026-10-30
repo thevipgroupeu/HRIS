@@ -1,0 +1,10 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="card" style="max-width:480px;margin:8vh auto">
+  <h1>PeopleHub sign in</h1>
+  <p class="muted">For THEVIPGROUP employees and interns. Use the employee account provided by HR or IT.</p>
+  <p>There is no public signup for PeopleHub. Contact HR or IT if you need an account or help signing in.</p>
+  <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Sign in</button>{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}</form>
+</div>
+{% endblock %}

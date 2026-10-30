@@ -1,0 +1,39 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}My dashboard{% endblock %}
+{% block content %}
+<h1>Hello, {{ portal_employee.employee_first_name }}</h1>
+<p class="muted">Your work information, requests and development in one place.</p>
+<div class="grid">
+  <section class="card"><h2>My account</h2>
+    <p><strong>Name:</strong> {{ portal_employee.get_full_name }}</p>
+    <p><a href="{% url 'peoplehub:my-profile' %}">View my personal profile</a></p>
+    <p><strong>Company email:</strong> {{ portal_employee.employee_work_info.email|default:"Not provisioned" }}</p>
+    <p><strong>Staff ID:</strong> {% if onboarding %}{{ onboarding.intern_id }} / {{ onboarding.employee_badge_id }}{% else %}{{ portal_employee.badge_id|default:"Not assigned" }}{% endif %}</p>
+    <p><strong>Venture:</strong> {{ venture.name|default:"Not assigned" }}</p>
+    <p><strong>Department:</strong> {{ portal_employee.employee_work_info.department_id|default:"Not assigned" }}</p>
+    <p><strong>Supervisor:</strong> {{ portal_employee.employee_work_info.reporting_manager_id|default:"Not assigned" }}</p>
+    {% if onboarding %}<p><strong>Internship:</strong> {{ onboarding.start_date }} – {{ onboarding.end_date }}</p>{% elif portal_employee.employee_work_info.date_joining or portal_employee.employee_work_info.contract_end_date %}<p><strong>Employment/internship dates:</strong> {{ portal_employee.employee_work_info.date_joining|default:"Not assigned" }} – {{ portal_employee.employee_work_info.contract_end_date|default:"Not assigned" }}</p>{% endif %}
+    <h3>Company policies</h3><ul>{% for item in policies %}<li><a href="{% url 'peoplehub:policy-detail' item.pk %}">{{ item.title }}</a></li>{% empty %}<li>None assigned.</li>{% endfor %}</ul>
+  </section>
+  <section class="card"><h2>My work</h2>
+    <p><strong>Work model:</strong> {{ portal_employee.employee_work_info.work_type_id|default:"Not assigned" }} · {{ portal_employee.employee_work_info.location|default:"Location not assigned" }}</p>
+    <h3>Recent attendance</h3><ul>{% for item in attendance %}<li>{{ item.attendance_date }} — {{ item.attendance_worked_hour }}</li>{% empty %}<li>No attendance recorded.</li>{% endfor %}</ul>
+    <h3>Leave balances</h3><ul>{% for item in leave_balances %}<li>{{ item.leave_type_id }}: {{ item.total_leave_days }} days</li>{% empty %}<li>No balance assigned.</li>{% endfor %}</ul>
+    <p><a class="button" href="{% url 'peoplehub:leave-create' %}">Request leave</a></p>
+    <h3>Assigned assets</h3><ul>{% for item in assets %}<li>{{ item.asset_id }}{% if item.asset_item_id %} — {{ item.asset_item_id }}{% endif %}</li>{% empty %}<li>No active allocations.</li>{% endfor %}</ul>
+    <h3>Project and first-week tasks</h3><ul>{% for item in tasks %}<li>{{ item.title }} — {{ item.get_status_display }}</li>{% empty %}<li>No tasks assigned.</li>{% endfor %}</ul>
+    <h3>Weekly reports and monthly presentations</h3><ul>{% for item in reporting %}<li>{{ item.get_kind_display }}: {{ item.title }} — {{ item.get_status_display }}{% if item.due_date %}, due {{ item.due_date }}{% endif %}</li>{% empty %}<li>No reporting assignment.</li>{% endfor %}</ul>
+  </section>
+  <section class="card"><h2>My development</h2>
+    <h3>Training, Moodle and skills</h3><ul>{% for item in learning %}<li>{% if item.launch_url %}<a href="{{ item.launch_url }}" rel="noopener noreferrer">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %} — {{ item.progress_percent }}% ({{ item.get_status_display }}){% if item.due_date %}, due {{ item.due_date }}{% endif %}</li>{% empty %}<li>No learning assignments.</li>{% endfor %}</ul>
+    {% if portal_roles.supervisor %}<h3>Overdue mandatory training</h3><ul>{% for item in training_notifications %}<li>{{ item.enrollment.assignment.employee.get_full_name }}: {{ item.enrollment.programme_course.course.title }} — due {{ item.enrollment.due_date }}</li>{% empty %}<li>No overdue mandatory training.</li>{% endfor %}</ul>{% endif %}
+    <h3>Goals</h3><ul>{% for item in objectives %}<li>{{ item.objective|default:item.objective_id }} — {{ item.progress_percentage }}%</li>{% empty %}<li>No goals assigned.</li>{% endfor %}</ul>
+    <h3>Feedback and reviews</h3><ul>{% for item in feedback %}<li>{{ item.review_cycle }} — {{ item.status }}</li>{% empty %}<li>No active review cycle.</li>{% endfor %}</ul>
+  </section>
+  <section class="card"><h2>My requests</h2>
+    <p><a class="button" href="{% url 'peoplehub:request-create' %}">Create request</a></p>
+    <ul>{% for item in requests %}<li>{{ item.title }} — {{ item.get_status_display }}</li>{% empty %}<li>No requests submitted.</li>{% endfor %}</ul>
+    <h3>Leave request history</h3><ul>{% for item in leave_requests %}<li>{{ item.start_date }} – {{ item.end_date }}: {{ item.get_status_display }}</li>{% empty %}<li>No leave requests.</li>{% endfor %}</ul>
+  </section>
+</div>
+{% endblock %}

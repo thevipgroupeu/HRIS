@@ -1,0 +1,16 @@
+{
+  "mode": "native",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "temporary in-memory SQLite",
+  "elapsed_seconds": 26.92,
+  "exit_code": 0,
+  "summary": [
+    "Found 51 test(s).",
+    "System check identified no issues (0 silenced).",
+    "Ran 51 tests in 7.486s",
+    "OK"
+  ],
+  "exception": null
+}

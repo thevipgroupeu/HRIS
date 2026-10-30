@@ -1,4 +1,4 @@
-.PHONY: help dev prod build stop logs logs-web shell clean db-shell status restart makemessages compilemessages test-smoke test-unit test-cov
+.PHONY: help dev prod build stop logs logs-web shell clean db-shell status restart makemessages compilemessages test-smoke test-unit test-cov test-tvg
 
 COMPOSE ?= docker compose
 COMPOSE_PROD ?= $(COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml
@@ -73,3 +73,14 @@ test-cov: ## Smoke suite under coverage (low fail-under floor)
 	python -m coverage erase
 	python -m coverage run --source=$(COV_SOURCE) manage.py test $(SMOKE_LABELS) --verbosity=1
 	python -m coverage report --fail-under=$(COV_FAIL_UNDER)
+
+# THEVIPGROUP extensions. horilla.settings.tvg_test is an explicit in-memory
+# SQLite settings module (migrations disabled); it never touches DATABASE_URL.
+# Candidate-account tests run under the isolated CareerHub settings in the
+# public release check.  Point the private suite at tvg_careers.tests so Django
+# does not discover tvg_careers.accounts.tests under Horilla's staff user model.
+TVG_LABELS ?= tvg_core tvg_careers.tests tvg_erasmus tvg_interviews tvg_onboarding tvg_peoplehub tvg_reporting tvg_offboarding tvg_automation tvg_training tvg_analytics
+TVG_TEST_SETTINGS ?= horilla.settings.tvg_test
+
+test-tvg: ## Run THEVIPGROUP extension tests (override TVG_LABELS=...)
+	python manage.py test $(TVG_LABELS) --settings=$(TVG_TEST_SETTINGS) --verbosity=1

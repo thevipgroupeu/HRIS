@@ -1,0 +1,98 @@
+{% load static %}
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ page_title }} | THEVIPGROUP CareerHub</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta name="robots" content="{{ robots|default:'index, follow' }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="THEVIPGROUP CareerHub">
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#f7f8fb">
+  <link rel="icon" href="{% static 'careerhub/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'careerhub/site.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="{% url 'careerhub:landing' %}" aria-label="THEVIPGROUP CareerHub home">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <circle cx="13" cy="20" r="9" fill="#14338c"></circle>
+          <circle cx="27" cy="13" r="8" fill="#d95ccc" fill-opacity=".9"></circle>
+          <circle cx="27" cy="27" r="8" fill="#66b847" fill-opacity=".9"></circle>
+          <path d="M11 20c5-7 12-7 18 0-6 7-13 7-18 0Z" fill="#fff"></path>
+        </svg>
+        <span class="brand-name">THEVIPGROUP</span>
+        <span class="brand-product">CareerHub</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Primary navigation">
+        <a href="{% url 'careerhub:opportunities' %}">Opportunities</a>
+        <a href="{% url 'careerhub:internships' %}">Internships</a>
+        <a href="{% url 'careerhub:erasmus' %}">Erasmus+</a>
+        <a href="{% url 'careerhub:process' %}">Process &amp; FAQs</a>
+        {% if request.user.is_authenticated %}<a href="{% url 'careerhub:candidate-dashboard' %}">Candidate dashboard</a>{% else %}<a href="{% url 'careerhub:candidate-login' %}">Candidate sign in</a>{% endif %}
+      </nav>
+      <a class="button button-dark header-action" href="{% url 'careerhub:opportunities' %}">View roles</a>
+
+      <details class="mobile-nav">
+        <summary aria-label="Open navigation">Menu</summary>
+        <nav aria-label="Mobile navigation">
+          <a href="{% url 'careerhub:opportunities' %}">Opportunities</a>
+          <a href="{% url 'careerhub:internships' %}">Internships</a>
+          <a href="{% url 'careerhub:erasmus' %}">Erasmus+</a>
+          <a href="{% url 'careerhub:process' %}">Process &amp; FAQs</a>
+          <a href="{% url 'careerhub:privacy' %}">Privacy &amp; contact</a>
+          {% if request.user.is_authenticated %}<a href="{% url 'careerhub:candidate-dashboard' %}">Candidate dashboard</a>{% else %}<a href="{% url 'careerhub:candidate-login' %}">Candidate sign in</a>{% endif %}
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <div>
+        <a class="brand brand-inverse" href="{% url 'careerhub:landing' %}">
+          <span class="brand-name">THEVIPGROUP</span>
+          <span class="brand-product">CareerHub</span>
+        </a>
+        <p>Building digital products and developing people from Kraków to the world.</p>
+      </div>
+      <div>
+        <h2>Explore</h2>
+        <a href="{% url 'careerhub:opportunities' %}">All opportunities</a>
+        <a href="{% url 'careerhub:internships' %}">Internships</a>
+        <a href="{% url 'careerhub:erasmus' %}">Erasmus+</a>
+      </div>
+      <div>
+        <h2>Ventures</h2>
+        <a href="{% url 'careerhub:venture-opportunities' 'fluxops' %}">FluxOps</a>
+        <a href="{% url 'careerhub:venture-opportunities' 'findmystay' %}">FindMyStay</a>
+        <a href="{% url 'careerhub:venture-opportunities' 'thevipgroup' %}">THEVIPGROUP</a>
+      </div>
+      <div>
+        <h2>Contact</h2>
+        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+        <a href="{% url 'careerhub:privacy' %}">Privacy &amp; contact</a>
+        <a href="https://thevipgroup.eu/" rel="external">thevipgroup.eu ↗</a>
+      </div>
+    </div>
+    <div class="shell footer-legal">
+      <span>THEVIPGROUP Sp. z o.o. · Kraków, Poland</span>
+      <span>© {% now "Y" %} THEVIPGROUP Sp. z o.o.</span>
+    </div>
+  </footer>
+</body>
+</html>

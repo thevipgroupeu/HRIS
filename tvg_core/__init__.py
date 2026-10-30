@@ -1,0 +1,1 @@
+"""THEVIPGROUP shared domain primitives."""

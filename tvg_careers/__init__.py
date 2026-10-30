@@ -1,0 +1,1 @@
+"""THEVIPGROUP CareerHub domain extensions."""

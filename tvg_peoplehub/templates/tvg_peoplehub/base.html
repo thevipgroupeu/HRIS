@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PeopleHub{% endblock %} · THEVIPGROUP</title>
+  <style>
+    :root { color-scheme: light; --ink:#172033; --muted:#64748b; --line:#dbe2ea; --brand:#18385f; --soft:#f5f7fa; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:var(--soft); font:15px/1.5 system-ui,sans-serif; }
+    header { background:var(--brand); color:white; } .bar { max-width:1180px; margin:auto; padding:16px 24px; display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+    header a { color:white; text-decoration:none; } nav { display:flex; gap:16px; flex:1; flex-wrap:wrap; } nav form { margin-left:auto; }
+    button,.button { border:0; border-radius:5px; padding:9px 14px; background:var(--brand); color:white; cursor:pointer; text-decoration:none; display:inline-block; }
+    header button { background:white; color:var(--brand); } main { max-width:1180px; margin:24px auto; padding:0 24px 40px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:18px; } .card { background:white; border:1px solid var(--line); border-radius:9px; padding:20px; }
+    h1,h2,h3 { line-height:1.2; margin-top:0; } h2 { font-size:18px; } h3 { font-size:15px; margin-top:18px; } .muted { color:var(--muted); }
+    table { border-collapse:collapse; width:100%; background:white; } th,td { border-bottom:1px solid var(--line); padding:10px; text-align:left; vertical-align:top; } th { background:#eef2f6; }
+    ul { padding-left:20px; } label { display:block; font-weight:600; margin-top:12px; } input,select,textarea { width:100%; max-width:620px; padding:9px; border:1px solid #aab7c5; border-radius:4px; } .errorlist { color:#a11212; }
+  </style>
+</head>
+<body>
+{% if user.is_authenticated %}
+<header><div class="bar">
+  <strong><a href="{% url 'peoplehub:dashboard' %}">PeopleHub</a></strong>
+  <nav aria-label="PeopleHub navigation">
+    <a href="{% url 'peoplehub:dashboard' %}">My dashboard</a>
+    <a href="{% url 'peoplehub:directory' %}">Directory</a>
+    <a href="{% url 'peoplehub:request-create' %}">New request</a>
+    <a href="{% url 'reporting:home' %}">Reporting</a>
+    <a href="{% url 'completion:home' %}">Completion</a>
+    {% if portal_roles.supervisor or portal_roles.hr or portal_roles.management %}<a href="{% url 'peoplehub:team' %}">My team</a>{% endif %}
+    {% if reporting_permissions.review %}<a href="{% url 'reporting:review-queue' %}">Reviews</a>{% endif %}
+    {% if reporting_permissions.management %}<a href="{% url 'reporting:management' %}">Reporting status</a>{% endif %}
+    {% if portal_roles.it_administrator %}<a href="{% url 'peoplehub:request-queue' %}">Request queue</a>{% endif %}
+  </nav>
+  <form method="post" action="{% url 'peoplehub:logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+</div></header>
+{% endif %}
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>

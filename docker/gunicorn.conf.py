@@ -32,7 +32,10 @@ keepalive = 5
 accesslog = "-"
 errorlog = "-"
 loglevel = os.environ.get("GUNICORN_LOG_LEVEL", "info")
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
+# Verification/reset URLs contain bearer tokens. Never log URLs, referrers,
+# request headers, usernames or IPs in access logs. Error/edge logs need their
+# own redaction review before release.
+access_log_format = "%(t)s method=%(m)s status=%(s)s bytes=%(b)s duration_us=%(D)s"
 
 # Process naming
 proc_name = "horilla-hrms"

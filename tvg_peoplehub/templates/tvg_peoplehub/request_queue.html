@@ -1,0 +1,3 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Request queue{% endblock %}
+{% block content %}<h1>PeopleHub request queue</h1><table><thead><tr><th>Owner</th><th>Type</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead><tbody>{% for item in queue %}<tr><td>{{ item.employee_id }}</td><td>{{ item.ticket_type }}</td><td>{{ item.title }}</td><td>{{ item.get_priority_display }}</td><td>{{ item.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5">No requests.</td></tr>{% endfor %}</tbody></table>{% endblock %}

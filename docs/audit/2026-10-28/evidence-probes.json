@@ -1,0 +1,24 @@
+{
+  "mode": "probes",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "temporary in-memory SQLite",
+  "elapsed_seconds": 26.94,
+  "exit_code": 1,
+  "summary": [
+    "Found 4 test(s).",
+    "System check identified no issues (0 silenced).",
+    "AUDIT: configured tenant status API returned 1 foreign-tenant applications; expected zero",
+    "AUDIT: low-privilege employee native Candidate detail returned HTTP 200; expected 403/404",
+    "AUDIT: unrelated authenticated employee CV download returned HTTP 200; expected 403/404",
+    "AUDIT: configured tenant withdrawal returned HTTP 200; foreign record changed=True; expected 404 and unchanged",
+    "FAIL: test_application_status_respects_configured_legal_employer (audit_probes.ProductionSecurityProbes.test_application_status_respects_configured_legal_employer)",
+    "FAIL: test_native_candidate_detail_requires_recruitment_object_access (audit_probes.ProductionSecurityProbes.test_native_candidate_detail_requires_recruitment_object_access)",
+    "FAIL: test_native_document_download_requires_object_authorization (audit_probes.ProductionSecurityProbes.test_native_document_download_requires_object_authorization)",
+    "FAIL: test_withdraw_cannot_mutate_another_legal_employer (audit_probes.ProductionSecurityProbes.test_withdraw_cannot_mutate_another_legal_employer)",
+    "Ran 4 tests in 0.705s",
+    "FAILED (failures=4)"
+  ],
+  "exception": null
+}

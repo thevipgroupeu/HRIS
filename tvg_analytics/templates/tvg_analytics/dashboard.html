@@ -1,0 +1,154 @@
+{% extends "index.html" %}
+{% block content %}
+<main class="oh-wrapper tvg-analytics" aria-labelledby="tvg-analytics-title">
+  <style>
+    .tvg-analytics { padding-bottom: 2rem; }
+    .tvg-analytics h2 { margin-top: 1.75rem; }
+    .tvg-analytics .tvg-muted { color: #5f6368; }
+    .tvg-analytics .tvg-tabs a { margin-right: .75rem; }
+    .tvg-analytics .tvg-tabs a[aria-current="page"] { font-weight: 700; text-decoration: underline; }
+    .tvg-analytics .tvg-filters { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: flex-end; }
+    .tvg-analytics .tvg-filters label { display: block; font-size: .85rem; font-weight: 600; }
+    .tvg-analytics .tvg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
+    .tvg-analytics .tvg-card { border: 1px solid #dadce0; border-radius: .5rem; padding: .9rem 1rem; background: #fff; }
+    .tvg-analytics .tvg-card h3 { font-size: .95rem; margin: 0 0 .35rem; }
+    .tvg-analytics .tvg-value { font-size: 1.9rem; font-weight: 700; margin: 0; }
+    .tvg-analytics table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .tvg-analytics th, .tvg-analytics td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #eceff1; vertical-align: top; }
+    .tvg-analytics caption { text-align: left; font-weight: 600; padding: .5rem 0; }
+    .tvg-analytics .tvg-bar { background: #e8eaed; height: .55rem; border-radius: .3rem; min-width: 6rem; }
+    .tvg-analytics .tvg-bar span { display: block; height: 100%; border-radius: .3rem; background: #1a73e8; }
+    .tvg-analytics .tvg-breakdowns { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 1.5rem; }
+  </style>
+
+  <header>
+    <h1 id="tvg-analytics-title">{% if dashboard == "recruitment" %}Recruitment analytics{% else %}PeopleOps executive dashboard{% endif %}</h1>
+    <p class="tvg-muted">Aggregate operational metrics only: no individual records, documents or protected characteristics. Each metric declares its unit — unique people, applications, interviews, offers, acceptances and actual starts are counted separately and are not a single funnel. Analytics never makes or enacts hiring decisions.</p>
+    <nav class="tvg-tabs" aria-label="Analytics dashboards">
+      <a href="{% url 'analytics:executive' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}" {% if dashboard == "executive" %}aria-current="page"{% endif %}>Executive</a>
+      <a href="{% url 'analytics:recruitment' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}" {% if dashboard == "recruitment" %}aria-current="page"{% endif %}>Recruitment</a>
+      {% for report in horilla_reports %}<a href="{{ report.url }}">{{ report.label }} (Horilla report)</a>{% endfor %}
+    </nav>
+  </header>
+
+  <section aria-labelledby="tvg-filters-title">
+    <h2 id="tvg-filters-title">Filters</h2>
+    <form method="get" class="tvg-filters">
+      {% for field in analytics_form %}
+      <div>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div class="tvg-error" role="alert">{{ field.errors|join:" " }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div><button type="submit" class="oh-btn oh-btn--secondary">Apply filters</button></div>
+    </form>
+    {% if analytics_form.non_field_errors %}<p class="tvg-error" role="alert">{{ analytics_form.non_field_errors|join:" " }}</p>{% endif %}
+  </section>
+
+  {% if query %}
+  <p class="tvg-muted">Live figures for {{ query.period_start }} – {{ query.period_end }}, as of {{ query.as_of_date }}. Venture/department filters use the opening for recruitment metrics and the onboarding for internship metrics; company-wide automation metrics ignore them.</p>
+
+  <section aria-labelledby="tvg-summary-title">
+    <h2 id="tvg-summary-title">{% if dashboard == "recruitment" %}Recruitment summary{% else %}Executive summary{% endif %}</h2>
+    <div class="tvg-cards">
+      {% for card in cards %}
+      <article class="tvg-card" aria-labelledby="card-{{ card.key }}">
+        <h3 id="card-{{ card.key }}">{{ card.label }}</h3>
+        <p class="tvg-value">{% if card.no_data %}<span aria-label="No data">—</span>{% else %}{{ card.value|floatformat:"-2" }}{{ card.suffix }}{% endif %}</p>
+        {% if card.unit == "percent" and card.denominator != None %}<p class="tvg-muted">{{ card.numerator|floatformat:"-2" }} of {{ card.denominator|floatformat:"-2" }}</p>{% endif %}
+        <details><summary>Definition</summary><p>{{ card.definition }}</p><p class="tvg-muted">Unit: {{ card.unit }} · {{ card.semantics_label }}</p></details>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if details %}
+  <section aria-labelledby="tvg-details-title">
+    <h2 id="tvg-details-title">{% if dashboard == "recruitment" %}Pipeline detail{% else %}Internship and administration{% endif %}</h2>
+    <table>
+      <caption>Supporting metrics</caption>
+      <thead><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Basis</th><th scope="col">Definition</th></tr></thead>
+      <tbody>
+      {% for item in details %}
+        <tr>
+          <th scope="row">{{ item.label }}</th>
+          <td>{% if item.no_data %}—{% else %}{{ item.value|floatformat:"-2" }}{{ item.suffix }}{% endif %}</td>
+          <td>{% if item.unit == "percent" and item.denominator != None %}{{ item.numerator|floatformat:"-2" }} / {{ item.denominator|floatformat:"-2" }}{% else %}{{ item.unit }}{% endif %}</td>
+          <td class="tvg-muted">{{ item.definition }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="tvg-breakdowns-title">
+    <h2 id="tvg-breakdowns-title">{% if dashboard == "recruitment" %}Breakdowns and bottlenecks{% else %}Breakdowns{% endif %}</h2>
+    <div class="tvg-breakdowns">
+    {% for breakdown in breakdowns %}
+      <table>
+        <caption>{{ breakdown.label }}{% if breakdown.company_wide %} (company-wide){% endif %}</caption>
+        <thead><tr><th scope="col">{% if breakdown.unit == "days" %}Stage / status{% else %}Group{% endif %}</th><th scope="col">{% if breakdown.unit == "days" %}Average days{% else %}Count ({{ breakdown.unit }}){% endif %}</th><th scope="col"><span class="tvg-muted">Relative</span></th></tr></thead>
+        <tbody>
+        {% for row in breakdown.rows %}
+          <tr>
+            <th scope="row">{{ row.label }}</th>
+            <td>{% if breakdown.unit == "days" and not row.denominator %}—{% else %}{{ row.value|floatformat:"-2" }}{% endif %}{% if breakdown.unit == "days" and row.denominator %} <span class="tvg-muted">(n={{ row.denominator|floatformat:"0" }})</span>{% endif %}</td>
+            <td><div class="tvg-bar" aria-hidden="true"><span style="width: {{ row.share }}%"></span></div></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3" class="tvg-muted">No records in this period.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+    </div>
+  </section>
+
+  <section aria-labelledby="tvg-snapshot-title">
+    <h2 id="tvg-snapshot-title">Validated snapshot</h2>
+    <p class="tvg-muted">A snapshot freezes these figures, runs automated reconciliation checks and, once a user with the export permission publishes it, becomes visible to Metabase through the curated reporting view. Small cells are withheld from that view.</p>
+    {% if current_snapshot %}
+      <p>Current snapshot for these filters: <a href="{% url 'analytics:snapshot-detail' current_snapshot.public_id %}">revision {{ current_snapshot.revision }}</a> — {{ current_snapshot.get_status_display }}{% if current_snapshot.last_error %} ({{ current_snapshot.last_error }}){% endif %}.</p>
+    {% endif %}
+    {% if can_generate %}
+    <form method="post" action="{% url 'analytics:snapshot-create' %}">
+      {% csrf_token %}
+      {% for name, value in snapshot_fields.items %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+      <input type="hidden" name="dashboard" value="{{ dashboard }}">
+      {% if current_snapshot %}
+        <input type="hidden" name="rebuild" value="1">
+        <button type="submit" class="oh-btn oh-btn--secondary">Rebuild snapshot with current data</button>
+      {% else %}
+        <button type="submit" class="oh-btn oh-btn--secondary">Create validated snapshot</button>
+      {% endif %}
+    </form>
+    {% endif %}
+  </section>
+  {% else %}
+  <p role="alert">Correct the filters above to load analytics.</p>
+  {% endif %}
+
+  {% if snapshots %}
+  <section aria-labelledby="tvg-history-title">
+    <h2 id="tvg-history-title">Snapshot history</h2>
+    <table>
+      <caption>Most recent snapshots for your company</caption>
+      <thead><tr><th scope="col">Period</th><th scope="col">Revision</th><th scope="col">Status</th><th scope="col">Generated</th><th scope="col">Details</th></tr></thead>
+      <tbody>
+      {% for snapshot in snapshots %}
+        <tr>
+          <td>{{ snapshot.period_start }} – {{ snapshot.period_end }}{% if snapshot.filters.venture_id or snapshot.filters.department_id or snapshot.filters.role_id or snapshot.filters.source %} (filtered){% endif %}</td>
+          <td>{{ snapshot.revision }}</td>
+          <td>{{ snapshot.get_status_display }}</td>
+          <td>{{ snapshot.generated_at }}</td>
+          <td><a href="{% url 'analytics:snapshot-detail' snapshot.public_id %}">Checks and export</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

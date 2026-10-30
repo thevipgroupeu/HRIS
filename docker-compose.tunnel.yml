@@ -1,0 +1,7 @@
+# Optional overlay for cloudflared running on the same host, outside Docker.
+# Review together with docker/nginx.conf. Never publish 8080 on 0.0.0.0.
+# Trusted connector headers are accepted only on this listener.
+services:
+  nginx:
+    ports: !override
+      - "127.0.0.1:8080:8080"

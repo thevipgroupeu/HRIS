@@ -1,0 +1,30 @@
+{% extends 'index.html' %}
+{% load i18n %}
+{% block content %}
+<main class="oh-wrapper">
+  <div class="oh-main__titlebar oh-main__titlebar--left"><h1 class="oh-main__titlebar-title fw-bold">Pre-interview screening and verification</h1></div>
+  <p>Human screening decisions and private verification evidence for CareerHub applications. No AI decision is made here.</p>
+  {% for application in applications %}
+    <section class="oh-card-dashboard oh-card-dashboard--no-scale mb-3">
+      <div class="oh-card-dashboard__header"><h2>{{ application.candidate.name }} — {{ application.opening.title }}</h2></div>
+      <div class="oh-card-dashboard__body">
+        <p><strong>Screening:</strong> {{ application.screening.get_status_display|default:'Initial HR screening' }}</p>
+        <form method="post" action="{% url 'tvg_erasmus:screening-action' application.public_id %}">
+          {% csrf_token %}{{ screening_form.as_p }}<button class="oh-btn oh-btn--secondary" type="submit">Record screening action</button>
+        </form>
+        {% if application.verification_case %}
+          <p><strong>Verification:</strong> {{ application.verification_case.get_status_display }}</p>
+          {% for requirement in application.verification_case.requirements.all %}
+            <article class="oh-card-dashboard mb-2">
+              <h3>{{ requirement.title }}</h3><p>{{ requirement.get_status_display }}</p>
+              {% with evidence=requirement.evidence_versions.first %}{% if evidence and evidence.scan_status == 'clean' %}<a href="{% url 'tvg_erasmus:evidence-download' evidence.public_id %}">Secure download</a>{% endif %}{% endwith %}
+              <form method="post" action="{% url 'tvg_erasmus:requirement-review' requirement.public_id %}">{% csrf_token %}{{ review_form.as_p }}<button class="oh-btn oh-btn--secondary" type="submit">Record review</button></form>
+              {% if requirement.status == 'requested' or requirement.status == 'revision_needed' %}<form method="post" action="{% url 'tvg_erasmus:requirement-reminder' requirement.public_id %}">{% csrf_token %}<button class="oh-btn oh-btn--light-bkg" type="submit">Queue reminder</button></form>{% endif %}
+            </article>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </section>
+  {% empty %}<div class="oh-empty"><p>No applications are assigned to you for screening.</p></div>{% endfor %}
+</main>
+{% endblock %}

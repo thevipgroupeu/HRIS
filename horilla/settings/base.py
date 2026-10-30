@@ -669,6 +669,10 @@ from horilla.settings.security import (  # noqa: E402
 IS_PRODUCTION = is_production_mode(DEBUG, HORILLA_ENV)
 
 if IS_PRODUCTION:
+    if DEBUG:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured("DEBUG must be False when HORILLA_ENV=production")
     validate_production_secrets(SECRET_KEY, ALLOWED_HOSTS, DB_INIT_PASSWORD)
 
 if IS_PRODUCTION:

@@ -46,13 +46,15 @@ coverage.xml
 
 # Django stuff:
 *.log
-local_settings.py
+**/local_settings.py
 media/
 staticfiles/
 static_root/
 
 # Environments
 .env
+.env.*
+!.env.dist
 .venv
 env/
 venv/
@@ -73,6 +75,10 @@ node_modules/
 # Git
 .git
 .gitignore
+.github/
+
+# Operator-only material is not part of the application runtime
+AGENTS.md
 
 # Docker (avoid recursive copy)
 docker-compose.yml
@@ -85,6 +91,11 @@ TestDB.sqlite3
 # Backup artifacts
 csv_tmp/
 *.dump
+*-private-media/
+backups/
+backup/
+secrets/
+credentials/
 
 # Documentation (not needed in image)
 ARCHITECTURE_DIAGRAM.md

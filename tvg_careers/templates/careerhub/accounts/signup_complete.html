@@ -1,0 +1,5 @@
+{% extends 'careerhub/base.html' %}
+{% block body_class %}page-account{% endblock %}
+{% block content %}
+<section class="section"><div class="shell narrow-card"><p class="eyebrow">EMAIL VERIFICATION</p><h1>Check your email.</h1><p>If the address can be used for a CareerHub account, we have sent a verification link. For privacy, this page does not confirm whether an account already exists.</p><p>The link expires after 24 hours. Check your spam folder before trying again.</p><a class="button button-primary" href="{% url 'careerhub:candidate-login' %}">Return to sign in</a></div></section>
+{% endblock %}

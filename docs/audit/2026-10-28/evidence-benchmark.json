@@ -1,0 +1,17 @@
+{
+  "mode": "benchmark",
+  "date": "2026-10-28",
+  "python": "3.13.14",
+  "django": "5.2.18",
+  "database": "temporary in-memory SQLite",
+  "elapsed_seconds": 14.68,
+  "exit_code": 0,
+  "summary": [
+    "Found 1 test(s).",
+    "System check identified no issues (0 silenced).",
+    "AUDIT: single-process SQLite, 50 synthetic people/100 applications, 10 warmed analytics collections; median_ms=54.36, max_ms=81.44, sql_queries_min=64, sql_queries_max=64; no HTTP, concurrency, PostgreSQL, uploads, password hashing or production-capacity claim",
+    "Ran 1 test in 1.400s",
+    "OK"
+  ],
+  "exception": null
+}

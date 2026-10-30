@@ -1,0 +1,34 @@
+{% extends "tvg_peoplehub/base.html" %}
+{% block title %}Internship completion{% endblock %}
+{% block content %}
+<h1>Internship completion</h1>
+<p class="muted">Final reporting, university documents, asset returns, access revocation and administrative closure.</p>
+<section class="card">
+  <h2>My completion</h2>
+  <ul>
+    {% for case in own_cases %}
+      <li><a href="{% url 'completion:detail' case.public_id %}">{{ case.internship_end_date }} — {{ case.get_state_display }}</a></li>
+    {% empty %}<li>No completion case has been opened for you.</li>{% endfor %}
+  </ul>
+</section>
+{% if managed_cases %}
+<section class="card">
+  <h2>Managed completions</h2>
+  <table><thead><tr><th>Intern</th><th>End date</th><th>Supervisor</th><th>State</th></tr></thead><tbody>
+  {% for case in managed_cases %}<tr>
+    <td><a href="{% url 'completion:detail' case.public_id %}">{{ case.employee.get_full_name }}</a></td>
+    <td>{{ case.internship_end_date }}</td><td>{{ case.onboarding.supervisor }}</td><td>{{ case.get_state_display }}</td>
+  </tr>{% endfor %}
+  </tbody></table>
+</section>
+{% endif %}
+{% if eligible_onboardings %}
+<section class="card">
+  <h2>Start completion</h2>
+  <p>HR may start completion before the configured automatic window.</p>
+  <table><thead><tr><th>Intern</th><th>End date</th><th>Action</th></tr></thead><tbody>
+  {% for onboarding in eligible_onboardings %}<tr><td>{{ onboarding.employee.get_full_name }}</td><td>{{ onboarding.end_date }}</td><td><form method="post" action="{% url 'completion:start' onboarding.public_id %}">{% csrf_token %}<button type="submit">Start completion</button></form></td></tr>{% endfor %}
+  </tbody></table>
+</section>
+{% endif %}
+{% endblock %}

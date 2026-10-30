@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-28",
+  "scope": "pip-audit of existing local .venv site-packages, not release container",
+  "exit_code": 1,
+  "raw_advisory_entries": 12,
+  "distinct_advisory_ids": 9,
+  "packages": [
+    {
+      "name": "black",
+      "version": "24.4.2",
+      "advisories": [
+        {
+          "id": "CVE-2026-114134",
+          "fix_versions": [
+            "26.10.1"
+          ]
+        },
+        {
+          "id": "PYSEC-2026-2120",
+          "fix_versions": [
+            "26.3.0"
+          ]
+        },
+        {
+          "id": "PYSEC-2026-2121",
+          "fix_versions": [
+            "26.3.1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "djangorestframework",
+      "version": "3.18.1",
+      "advisories": [
+        {
+          "id": "CVE-2026-114136",
+          "fix_versions": [
+            "3.18.2"
+          ]
+        },
+        {
+          "id": "CVE-2026-114137",
+          "fix_versions": [
+            "3.18.2"
+          ]
+        },
+        {
+          "id": "CVE-2026-114138",
+          "fix_versions": [
+            "3.18.2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pdfkit",
+      "version": "1.0.0",
+      "advisories": [
+        {
+          "id": "PYSEC-2026-2860",
+          "fix_versions": []
+        }
+      ]
+    },
+    {
+      "name": "pip",
+      "version": "26.1.2",
+      "advisories": [
+        {
+          "id": "PYSEC-2026-3721",
+          "fix_versions": [
+            "26.2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "setuptools",
+      "version": "84.0.0",
+      "advisories": [
+        {
+          "id": "GHSA-xmj3-9gf7-h52w",
+          "fix_versions": [
+            "84.1.0"
+          ]
+        }
+      ]
+    }
+  ],
+  "note": "Mechanically reduced to package/version/advisory/fix metadata. Duplicated IDs and third-party descriptions/proof-of-concept payloads omitted."
+}

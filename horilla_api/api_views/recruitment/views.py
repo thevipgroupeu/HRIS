@@ -2,10 +2,12 @@
 horilla_api/api_views/recruitment/views.py
 """
 
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -73,6 +75,13 @@ def object_check(cls, pk):
         return obj
     except cls.DoesNotExist:
         return None
+
+
+def recruitment_read_scope(queryset, user, permission, company_field):
+    scope = getattr(settings, "HORILLA_RECRUITMENT_ACCESS_SCOPE", None)
+    if scope:
+        return import_string(scope)(queryset, user, permission, company_field)
+    return permission_based_queryset(user, permission, queryset, user_obj=True)
 
 
 # Recruitment Views
@@ -269,12 +278,18 @@ class CandidateGetCreateAPIView(APIView):
         user = request.user
         # checking user level permissions
         perm = "recruitment.view_candidate"
-        queryset = permission_based_queryset(user, perm, queryset, user_obj=True)
+        queryset = recruitment_read_scope(
+            queryset, user, perm, "recruitment_id__company_id"
+        )
         return queryset
 
     def get(self, request, pk=None, recruitment_id=None, stage_id=None):
         if pk:
-            candidate = object_check(Candidate, pk)
+            candidate = (
+                self.get_queryset(request, recruitment_id, stage_id)
+                .filter(pk=pk)
+                .first()
+            )
             if candidate is None:
                 return Response({"error": _("Candidate not found")}, status=404)
             serializer = CandidateSerializer(candidate)
@@ -317,7 +332,9 @@ class CandidateGetUpdateDeleteAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        candidate = object_check(Candidate, pk)
+        candidate = (
+            CandidateGetCreateAPIView().get_queryset(request).filter(pk=pk).first()
+        )
         if candidate is None:
             return Response({"error": _("Candidate not found")}, status=404)
         serializer = CandidateSerializer(candidate)
@@ -1119,12 +1136,18 @@ class CandidateDocumentGetCreateAPIView(APIView):
         user = request.user
         # checking user level permissions
         perm = "recruitment.view_candidatedocument"
-        queryset = permission_based_queryset(user, perm, queryset, user_obj=True)
+        queryset = recruitment_read_scope(
+            queryset, user, perm, "candidate_id__recruitment_id__company_id"
+        )
         return queryset
 
     def get(self, request, pk=None, candidate_id=None, document_request_id=None):
         if pk:
-            document = object_check(CandidateDocument, pk)
+            document = (
+                self.get_queryset(request, candidate_id, document_request_id)
+                .filter(pk=pk)
+                .first()
+            )
             if document is None:
                 return Response({"error": _("CandidateDocument not found")}, status=404)
             serializer = CandidateDocumentSerializer(document)
@@ -1162,7 +1185,12 @@ class CandidateDocumentGetUpdateDeleteAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
-        document = object_check(CandidateDocument, pk)
+        document = (
+            CandidateDocumentGetCreateAPIView()
+            .get_queryset(request)
+            .filter(pk=pk)
+            .first()
+        )
         if document is None:
             return Response({"error": _("CandidateDocument not found")}, status=404)
         serializer = CandidateDocumentSerializer(document)
