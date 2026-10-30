@@ -156,7 +156,8 @@ interpret these suites as the continuous, two-runtime lifecycle acceptance test.
    staging flows, provider/manual deactivation proof, privacy/retention/DSR,
    accessibility/mobile and representative load acceptance from the audit checklist.
 
-See [SERVER_HANDOFF.md](SERVER_HANDOFF.md) and the original
+See the current [release gate status](RELEASE_GATE_STATUS.md),
+[SERVER_HANDOFF.md](SERVER_HANDOFF.md) and the original
 [release checklist](../../audit/2026-10-28/RELEASE_CHECKLIST.md).
 The confirmed Linux/Docker/Tunnel rollout plan is in
 [LINUX_LOCAL_SERVER.md](LINUX_LOCAL_SERVER.md).

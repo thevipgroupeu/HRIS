@@ -1,17 +1,17 @@
 {
-  "run_at_utc": "2026-10-30T10:20:23Z",
+  "run_at_utc": "2026-10-30T10:41:00Z",
   "scope": "isolated disposable PostgreSQL 16 and authenticated Redis 7 containers; synthetic records, local-memory email, disabled or synthetic external adapters",
-  "image_id": "sha256:03179891d100fbd0459dfe6c9dfdc38b9234ac79b307900235c44c86a80586d7",
+  "image_id": "sha256:0026b92a5d6bfacabebdada31cb48dcd4612d0a32ddad1e06c490bccae699cc3",
   "postgresql": "16.15",
   "redis": "7.4.11",
   "public_runtime": {
     "tests": 44,
-    "elapsed_seconds": 17.664,
+    "elapsed_seconds": 19.501,
     "passed": true
   },
   "private_runtime": {
     "tests": 265,
-    "elapsed_seconds": 140.589,
+    "elapsed_seconds": 131.362,
     "passed": true
   },
   "migration_rehearsal": {
