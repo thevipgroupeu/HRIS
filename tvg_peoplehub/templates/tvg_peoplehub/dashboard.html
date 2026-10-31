@@ -98,6 +98,34 @@
   </a>
 </div>
 
+<!-- Personalized action centre -->
+<section class="priority-panel" aria-labelledby="next-actions-title">
+  <div class="priority-head">
+    <div>
+      <p class="eyebrow-dark">TODAY'S FOCUS</p>
+      <h2 id="next-actions-title">My next actions</h2>
+      <p class="muted small">One place for deadlines across onboarding, reporting, projects, and training.</p>
+    </div>
+    {% if summary.next_actions %}<span class="priority-count">{{ summary.next_actions|length }} active</span>{% else %}<span class="priority-count priority-clear">All clear</span>{% endif %}
+  </div>
+  {% if summary.next_actions %}
+  <div class="action-list">
+    {% for item in summary.next_actions %}
+    <a class="next-action{% if item.status == 'overdue' %} is-overdue{% endif %}" href="{{ item.href }}">
+      <span class="next-action-marker" aria-hidden="true"></span>
+      <span class="next-action-main">
+        <span class="next-action-label">{{ item.label }}</span>
+        <strong>{{ item.title }}</strong>
+      </span>
+      <span class="next-action-due">{% if item.status == "overdue" %}Overdue{% elif item.due_date %}Due {{ item.due_date|date:"j M" }}{% else %}Open{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="all-clear"><span aria-hidden="true">✓</span><div><strong>You are up to date</strong><p>No pending deadlines are assigned to you.</p></div></div>
+  {% endif %}
+</section>
+
 {% if portal_roles.supervisor and training_notifications %}
 <div class="notice notice-warning" role="status" style="margin-bottom:1.5rem">
   {% include "tvg_peoplehub/_icon.html" with name="alert" %}
@@ -125,6 +153,25 @@
 <div class="dash-grid">
   <!-- Left Column: Work & Deliverables -->
   <div>
+    {% if summary.onboarding %}
+    <section class="card" id="onboarding-progress" data-tab-section="work all" aria-labelledby="onboarding-title">
+      <div class="card-head">
+        <h2 id="onboarding-title">{% include "tvg_peoplehub/_icon.html" with name="check" %}Onboarding readiness</h2>
+        <span class="pill{% if summary.onboarding.percent == 100 %} pill-completed{% endif %}">{{ summary.onboarding.completed }}/{{ summary.onboarding.total }} required</span>
+      </div>
+      <div class="progress progress-large" role="progressbar" aria-label="Onboarding progress" aria-valuenow="{{ summary.onboarding.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ summary.onboarding.percent }}%"></span></div>
+      <div class="progress-caption"><span>{{ summary.onboarding.percent }}% complete</span>{% if summary.onboarding.overdue %}<strong>{{ summary.onboarding.overdue }} overdue</strong>{% else %}<span>On track</span>{% endif %}</div>
+      <ul class="list compact-list">
+        {% for item in onboarding_checklist|slice:":6" %}
+        <li data-searchable>
+          <span class="list-main"><span class="list-title">{{ item.native_task.onboarding_task_id.task_title }}</span>{% if item.due_date %}<span class="list-sub">Due {{ item.due_date|date:"j M Y" }}</span>{% endif %}</span>
+          {% if item.completed_at or item.native_task.status == "done" %}<span class="pill pill-completed">Complete</span>{% else %}<span class="pill pill-{{ item.native_task.status }}">{{ item.native_task.get_status_display }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
     <!-- Weekly Reports & Presentations -->
     <section class="card" id="reporting-section" data-tab-section="work all" aria-labelledby="reporting-title">
       <div class="card-head">
@@ -201,6 +248,29 @@
 
   <!-- Right Column: Account, Leave, Policies & Assets -->
   <div>
+    <!-- Company updates -->
+    <section class="card" id="company-updates" data-tab-section="organization all" aria-labelledby="updates-title">
+      <div class="card-head"><h2 id="updates-title">{% include "tvg_peoplehub/_icon.html" with name="inbox" %}Company updates</h2></div>
+      <ul class="update-list">
+        {% for item in announcements %}
+        <li data-searchable>
+          <span class="update-date">{{ item.created_at|date:"d" }}<small>{{ item.created_at|date:"M" }}</small></span>
+          <span class="list-main"><span class="list-title">{{ item.title }}</span>{% if item.description %}<span class="list-sub">{{ item.description|striptags|truncatewords:18 }}</span>{% endif %}</span>
+        </li>
+        {% empty %}<li><span class="empty">No current company announcements.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Upcoming holidays -->
+    <section class="card" id="holidays-section" data-tab-section="organization all" aria-labelledby="holidays-title">
+      <div class="card-head"><h2 id="holidays-title">{% include "tvg_peoplehub/_icon.html" with name="calendar" %}Upcoming holidays</h2><span class="small muted">Next 60 days</span></div>
+      <ul class="list compact-list">
+        {% for item in holidays %}
+        <li data-searchable><span class="list-main"><span class="list-title">{{ item.name }}</span><span class="list-sub">{{ item.start_date|date:"l, j F" }}{% if item.end_date and item.end_date != item.start_date %} – {{ item.end_date|date:"j F" }}{% endif %}</span></span></li>
+        {% empty %}<li><span class="empty">No upcoming holidays assigned.</span></li>{% endfor %}
+      </ul>
+    </section>
+
     <!-- My Profile & Assigned Venture -->
     <section class="card" id="about-section" data-tab-section="organization all" aria-labelledby="about-title">
       <div class="card-head">

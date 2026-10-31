@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -9,6 +10,7 @@ from django.utils import timezone
 
 from asset.models import AssetAssignment
 from attendance.models import Attendance
+from base.models import Announcement, Holidays
 from employee.models import Employee, Policy
 from helpdesk.models import Ticket
 from leave.models import AvailableLeave, LeaveRequest
@@ -107,6 +109,57 @@ def relevant_policies(employee: Employee):
         .filter(scope)
         .distinct()
         .order_by("title")
+    )
+
+
+def relevant_announcements(employee: Employee):
+    """Return current announcements explicitly visible to this employee.
+
+    The native manager relies on request-local company context.  PeopleHub has
+    a separate URL boundary, so this query applies the company and audience
+    constraints explicitly as a defence-in-depth measure.
+    """
+
+    work = employee.employee_work_info
+    audience = (
+        Q(is_visible_to_all=True)
+        | Q(employees=employee)
+        | Q(filtered_employees=employee)
+    )
+    if work.department_id_id:
+        audience |= Q(department=work.department_id)
+    if work.job_position_id_id:
+        audience |= Q(job_position=work.job_position_id)
+    today = timezone.localdate()
+    return (
+        Announcement._base_manager.filter(company_id=work.company_id)
+        .filter(Q(expire_date__isnull=True) | Q(expire_date__gte=today))
+        .filter(audience)
+        .distinct()
+        .order_by("-created_at")[:5]
+    )
+
+
+def upcoming_holidays(employee: Employee, *, days=60):
+    """Return company/global holidays applicable to the employee."""
+
+    work = employee.employee_work_info
+    today = timezone.localdate()
+    horizon = today + timedelta(days=days)
+    audience = Q(is_specific=False) | Q(employees=employee)
+    if work.department_id_id:
+        audience |= Q(department=work.department_id)
+    if work.job_position_id_id:
+        audience |= Q(job_position=work.job_position_id)
+    return (
+        Holidays._base_manager.filter(
+            Q(company_id=work.company_id) | Q(company_id__isnull=True),
+            Q(end_date__gte=today) | Q(end_date__isnull=True, start_date__gte=today),
+            start_date__lte=horizon,
+        )
+        .filter(audience)
+        .distinct()
+        .order_by("start_date", "name")[:8]
     )
 
 
@@ -259,6 +312,7 @@ def submit_request(*, employee: Employee, request_type, title, description, prio
 
 
 def dashboard_data(employee: Employee):
+    from tvg_onboarding.models import OnboardingChecklistLink
     from tvg_training.models import TrainingNotification
 
     onboarding = internship_identity(employee)
@@ -269,10 +323,20 @@ def dashboard_data(employee: Employee):
         PeopleHubLearningAssignment.Kind.WEEKLY_REPORT,
         PeopleHubLearningAssignment.Kind.MONTHLY_PRESENTATION,
     )
+    onboarding_checklist = OnboardingChecklistLink.all_objects.none()
+    if onboarding:
+        onboarding_checklist = (
+            OnboardingChecklistLink.all_objects.filter(onboarding=onboarding)
+            .select_related("native_task__onboarding_task_id")
+            .order_by("due_date", "code")
+        )
     return {
         "onboarding": onboarding,
         "venture": venture_for(employee),
         "policies": relevant_policies(employee),
+        "announcements": relevant_announcements(employee),
+        "holidays": upcoming_holidays(employee),
+        "onboarding_checklist": onboarding_checklist,
         "attendance": Attendance._base_manager.filter(employee_id=employee).order_by(
             "-attendance_date"
         )[:10],

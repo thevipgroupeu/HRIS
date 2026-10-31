@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.test import Client, TestCase, override_settings
 
+from horilla.settings.peoplehub import MIDDLEWARE, TEMPLATES
 from horilla.testkit import make_company, make_employee, make_user
 
 HOST = "people.thevipgroup.eu"
@@ -18,6 +19,8 @@ NEW_PASSWORD = "Synthetic-Replacement-Password-94!"
     LOGIN_URL="peoplehub:login",
     ALLOWED_HOSTS=[HOST, "testserver"],
     TWO_FACTORS_AUTHENTICATION=False,
+    MIDDLEWARE=MIDDLEWARE,
+    TEMPLATES=TEMPLATES,
 )
 class StaffAccountBoundaryTests(TestCase):
     def setUp(self):

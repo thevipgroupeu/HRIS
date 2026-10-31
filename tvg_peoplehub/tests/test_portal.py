@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -6,7 +6,14 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from base.models import Department, EmployeeType, JobPosition, WorkType
+from base.models import (
+    Announcement,
+    Department,
+    EmployeeType,
+    Holidays,
+    JobPosition,
+    WorkType,
+)
 from employee.models import EmployeeWorkInformation, Policy
 from helpdesk.models import Ticket, TicketType
 from horilla.testkit import make_company, make_employee, make_user
@@ -170,6 +177,86 @@ class PeopleHubPortalTests(TestCase):
         self.assertContains(profile, "intern.private@example.test")
         self.assertContains(profile, "PRIVATE HOME ADDRESS")
         self.assertNotContains(profile, "peer.personal.secret@example.test")
+
+    def test_dashboard_updates_and_holidays_are_audience_and_company_scoped(self):
+        visible = Announcement._base_manager.create(
+            title="Synthetic all-hands update",
+            description="A safe synthetic update for the company.",
+            is_visible_to_all=True,
+        )
+        visible.company_id.add(self.company)
+        department_update = Announcement._base_manager.create(
+            title="Synthetic engineering update",
+            description="Only the assigned department should see this.",
+            is_visible_to_all=False,
+        )
+        department_update.company_id.add(self.company)
+        department_update.department.add(self.department)
+        peer_only = Announcement._base_manager.create(
+            title="PRIVATE PEER UPDATE",
+            is_visible_to_all=False,
+        )
+        peer_only.company_id.add(self.company)
+        peer_only.employees.add(self.peer)
+        other_company = Announcement._base_manager.create(
+            title="OTHER COMPANY UPDATE",
+            is_visible_to_all=True,
+        )
+        other_company.company_id.add(self.other_company)
+
+        today = timezone.localdate()
+        Holidays._base_manager.create(
+            name="Synthetic company holiday",
+            start_date=today + timedelta(days=10),
+            company_id=self.company,
+        )
+        peer_holiday = Holidays._base_manager.create(
+            name="PRIVATE PEER HOLIDAY",
+            start_date=today + timedelta(days=11),
+            company_id=self.company,
+            is_specific=True,
+            assigning_type="employee",
+        )
+        peer_holiday.employees.add(self.peer)
+        Holidays._base_manager.create(
+            name="OTHER COMPANY HOLIDAY",
+            start_date=today + timedelta(days=12),
+            company_id=self.other_company,
+        )
+
+        self.client.force_login(self.intern_user)
+        response = self.client.get(reverse("peoplehub:dashboard"))
+        self.assertContains(response, "Synthetic all-hands update")
+        self.assertContains(response, "Synthetic engineering update")
+        self.assertContains(response, "Synthetic company holiday")
+        self.assertNotContains(response, "PRIVATE PEER UPDATE")
+        self.assertNotContains(response, "PRIVATE PEER HOLIDAY")
+        self.assertNotContains(response, "OTHER COMPANY UPDATE")
+        self.assertNotContains(response, "OTHER COMPANY HOLIDAY")
+
+    def test_dashboard_prioritizes_overdue_employee_actions(self):
+        today = timezone.localdate()
+        PeopleHubLearningAssignment.all_objects.create(
+            employee=self.intern,
+            kind=PeopleHubLearningAssignment.Kind.MOODLE,
+            title="Synthetic overdue safety training",
+            due_date=today - timedelta(days=1),
+            assigned_by=self.manager,
+        )
+        PeopleHubLearningAssignment.all_objects.create(
+            employee=self.intern,
+            kind=PeopleHubLearningAssignment.Kind.WEEKLY_REPORT,
+            title="Synthetic upcoming weekly report",
+            due_date=today + timedelta(days=2),
+            assigned_by=self.manager,
+        )
+
+        self.client.force_login(self.intern_user)
+        response = self.client.get(reverse("peoplehub:dashboard"))
+        self.assertContains(response, "My next actions")
+        self.assertContains(response, "Synthetic overdue safety training")
+        self.assertContains(response, "Synthetic upcoming weekly report")
+        self.assertContains(response, "Overdue")
 
     def test_supervisor_and_it_permissions_drive_navigation(self):
         self.manager_user.user_permissions.add(

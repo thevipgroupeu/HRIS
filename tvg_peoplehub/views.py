@@ -148,6 +148,8 @@ def _dashboard_summary(data, today):
         "learning_overdue": 0,
         "next_report": None,
         "internship": None,
+        "onboarding": None,
+        "next_actions": [],
     }
     for item in data["learning"]:
         if item.status != "completed":
@@ -163,6 +165,91 @@ def _dashboard_summary(data, today):
         key=lambda item: item.due_date,
     )
     summary["next_report"] = upcoming[0] if upcoming else None
+
+    actions = []
+
+    def add_action(*, title, label, due_date, href, status="pending"):
+        actions.append(
+            {
+                "title": title,
+                "label": label,
+                "due_date": due_date,
+                "href": href,
+                "status": status,
+            }
+        )
+
+    for item in data["reporting"]:
+        if item.status != "completed":
+            add_action(
+                title=item.title,
+                label=item.get_kind_display(),
+                due_date=item.due_date,
+                href="#reporting-section",
+                status=(
+                    "overdue" if item.due_date and item.due_date < today else "pending"
+                ),
+            )
+    for item in data["learning"]:
+        if item.status != "completed":
+            add_action(
+                title=item.title,
+                label="Training",
+                due_date=item.due_date,
+                href="#learning",
+                status=(
+                    "overdue" if item.due_date and item.due_date < today else "pending"
+                ),
+            )
+    for item in data["tasks"]:
+        if item.status in OPEN_TASK_STATUSES:
+            add_action(
+                title=item.title,
+                label="Project task",
+                due_date=item.end_date,
+                href="#tasks",
+                status=(
+                    "overdue" if item.end_date and item.end_date < today else "pending"
+                ),
+            )
+
+    checklist = list(data.get("onboarding_checklist", ()))
+    if checklist:
+        required = [item for item in checklist if item.required]
+        completed = [
+            item
+            for item in required
+            if item.completed_at or item.native_task.status == "done"
+        ]
+        overdue = 0
+        for item in required:
+            if item.completed_at or item.native_task.status == "done":
+                continue
+            is_overdue = bool(item.due_date and item.due_date < today)
+            overdue += int(is_overdue)
+            add_action(
+                title=item.native_task.onboarding_task_id.task_title,
+                label="Onboarding",
+                due_date=item.due_date,
+                href="#onboarding-progress",
+                status="overdue" if is_overdue else "pending",
+            )
+        summary["onboarding"] = {
+            "completed": len(completed),
+            "total": len(required),
+            "overdue": overdue,
+            "percent": round(len(completed) * 100 / len(required)) if required else 100,
+        }
+
+    actions.sort(
+        key=lambda item: (
+            item["status"] != "overdue",
+            item["due_date"] is None,
+            item["due_date"] or today,
+            item["title"],
+        )
+    )
+    summary["next_actions"] = actions[:6]
     onboarding = data.get("onboarding")
     if onboarding and onboarding.start_date and onboarding.end_date:
         total = max((onboarding.end_date - onboarding.start_date).days, 1)
