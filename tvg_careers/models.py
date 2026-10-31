@@ -42,7 +42,7 @@ class JobOpening(HorillaModel):
         Recruitment,
         on_delete=models.PROTECT,
         related_name="tvg_job_opening",
-        verbose_name=_("Horilla Recruitment"),
+        verbose_name=_("Recruitment Record"),
     )
     venture = models.ForeignKey(
         Venture,
@@ -359,7 +359,7 @@ class Application(HorillaModel):
             )
         if self.candidate.recruitment_id_id != self.opening.recruitment_id:
             errors["candidate"] = _(
-                "Candidate must belong to the opening's Horilla recruitment."
+                "Candidate must belong to the opening's recruitment record."
             )
         expected_position_id = self.opening.recruitment.job_position_id_id
         if self.candidate.job_position_id_id != expected_position_id:

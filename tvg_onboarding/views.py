@@ -166,7 +166,7 @@ def allocate(request, public_id):
 
     def action():
         allocate_asset(user=request.user, onboarding=onboarding, asset=asset)
-        messages.success(request, "Equipment allocated in Horilla Assets.")
+        messages.success(request, "Equipment allocated in PeopleOps Assets.")
         return _detail(onboarding)
 
     return _error_redirect(request, onboarding, action)

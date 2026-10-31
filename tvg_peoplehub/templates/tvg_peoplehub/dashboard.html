@@ -1,39 +1,275 @@
 {% extends "tvg_peoplehub/base.html" %}
-{% block title %}My dashboard{% endblock %}
+{% block title %}My Dashboard{% endblock %}
 {% block content %}
-<h1>Hello, {{ portal_employee.employee_first_name }}</h1>
-<p class="muted">Your work information, requests and development in one place.</p>
-<div class="grid">
-  <section class="card"><h2>My account</h2>
-    <p><strong>Name:</strong> {{ portal_employee.get_full_name }}</p>
-    <p><a href="{% url 'peoplehub:my-profile' %}">View my personal profile</a></p>
-    <p><strong>Company email:</strong> {{ portal_employee.employee_work_info.email|default:"Not provisioned" }}</p>
-    <p><strong>Staff ID:</strong> {% if onboarding %}{{ onboarding.intern_id }} / {{ onboarding.employee_badge_id }}{% else %}{{ portal_employee.badge_id|default:"Not assigned" }}{% endif %}</p>
-    <p><strong>Venture:</strong> {{ venture.name|default:"Not assigned" }}</p>
-    <p><strong>Department:</strong> {{ portal_employee.employee_work_info.department_id|default:"Not assigned" }}</p>
-    <p><strong>Supervisor:</strong> {{ portal_employee.employee_work_info.reporting_manager_id|default:"Not assigned" }}</p>
-    {% if onboarding %}<p><strong>Internship:</strong> {{ onboarding.start_date }} – {{ onboarding.end_date }}</p>{% elif portal_employee.employee_work_info.date_joining or portal_employee.employee_work_info.contract_end_date %}<p><strong>Employment/internship dates:</strong> {{ portal_employee.employee_work_info.date_joining|default:"Not assigned" }} – {{ portal_employee.employee_work_info.contract_end_date|default:"Not assigned" }}</p>{% endif %}
-    <h3>Company policies</h3><ul>{% for item in policies %}<li><a href="{% url 'peoplehub:policy-detail' item.pk %}">{{ item.title }}</a></li>{% empty %}<li>None assigned.</li>{% endfor %}</ul>
-  </section>
-  <section class="card"><h2>My work</h2>
-    <p><strong>Work model:</strong> {{ portal_employee.employee_work_info.work_type_id|default:"Not assigned" }} · {{ portal_employee.employee_work_info.location|default:"Location not assigned" }}</p>
-    <h3>Recent attendance</h3><ul>{% for item in attendance %}<li>{{ item.attendance_date }} — {{ item.attendance_worked_hour }}</li>{% empty %}<li>No attendance recorded.</li>{% endfor %}</ul>
-    <h3>Leave balances</h3><ul>{% for item in leave_balances %}<li>{{ item.leave_type_id }}: {{ item.total_leave_days }} days</li>{% empty %}<li>No balance assigned.</li>{% endfor %}</ul>
-    <p><a class="button" href="{% url 'peoplehub:leave-create' %}">Request leave</a></p>
-    <h3>Assigned assets</h3><ul>{% for item in assets %}<li>{{ item.asset_id }}{% if item.asset_item_id %} — {{ item.asset_item_id }}{% endif %}</li>{% empty %}<li>No active allocations.</li>{% endfor %}</ul>
-    <h3>Project and first-week tasks</h3><ul>{% for item in tasks %}<li>{{ item.title }} — {{ item.get_status_display }}</li>{% empty %}<li>No tasks assigned.</li>{% endfor %}</ul>
-    <h3>Weekly reports and monthly presentations</h3><ul>{% for item in reporting %}<li>{{ item.get_kind_display }}: {{ item.title }} — {{ item.get_status_display }}{% if item.due_date %}, due {{ item.due_date }}{% endif %}</li>{% empty %}<li>No reporting assignment.</li>{% endfor %}</ul>
-  </section>
-  <section class="card"><h2>My development</h2>
-    <h3>Training, Moodle and skills</h3><ul>{% for item in learning %}<li>{% if item.launch_url %}<a href="{{ item.launch_url }}" rel="noopener noreferrer">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %} — {{ item.progress_percent }}% ({{ item.get_status_display }}){% if item.due_date %}, due {{ item.due_date }}{% endif %}</li>{% empty %}<li>No learning assignments.</li>{% endfor %}</ul>
-    {% if portal_roles.supervisor %}<h3>Overdue mandatory training</h3><ul>{% for item in training_notifications %}<li>{{ item.enrollment.assignment.employee.get_full_name }}: {{ item.enrollment.programme_course.course.title }} — due {{ item.enrollment.due_date }}</li>{% empty %}<li>No overdue mandatory training.</li>{% endfor %}</ul>{% endif %}
-    <h3>Goals</h3><ul>{% for item in objectives %}<li>{{ item.objective|default:item.objective_id }} — {{ item.progress_percentage }}%</li>{% empty %}<li>No goals assigned.</li>{% endfor %}</ul>
-    <h3>Feedback and reviews</h3><ul>{% for item in feedback %}<li>{{ item.review_cycle }} — {{ item.status }}</li>{% empty %}<li>No active review cycle.</li>{% endfor %}</ul>
-  </section>
-  <section class="card"><h2>My requests</h2>
-    <p><a class="button" href="{% url 'peoplehub:request-create' %}">Create request</a></p>
-    <ul>{% for item in requests %}<li>{{ item.title }} — {{ item.get_status_display }}</li>{% empty %}<li>No requests submitted.</li>{% endfor %}</ul>
-    <h3>Leave request history</h3><ul>{% for item in leave_requests %}<li>{{ item.start_date }} – {{ item.end_date }}: {{ item.get_status_display }}</li>{% empty %}<li>No leave requests.</li>{% endfor %}</ul>
-  </section>
+
+<!-- Hero Banner -->
+<section class="hero" aria-labelledby="greeting">
+  <div>
+    <p class="eyebrow">THEVIPGROUP WORKSPACE · {{ today|date:"l, j F Y" }}</p>
+    <h1 id="greeting">Welcome back, {{ portal_employee.employee_first_name }} 👋</h1>
+    <p class="hero-copy">Your personalized workplace hub for project tasks, weekly reporting, leave planning, and organizational resources.</p>
+    <div class="chips">
+      {% if venture %}<span class="chip chip-venture"><span class="chip-dot"></span>Venture: {{ venture.name }}</span>{% endif %}
+      {% if portal_employee.employee_work_info.department_id %}<span class="chip">{{ portal_employee.employee_work_info.department_id }}</span>{% endif %}
+      {% if portal_employee.employee_work_info.job_position_id %}<span class="chip">{{ portal_employee.employee_work_info.job_position_id }}</span>{% endif %}
+      <span class="chip">ID: {{ portal_employee.badge_id|default:"EMP001" }}</span>
+    </div>
+    <div class="brand-lines hero-brand-lines">
+      <i></i><i></i><i></i>
+    </div>
+  </div>
+  {% if summary.internship %}
+  <div class="hero-panel" aria-label="Internship progress">
+    {% if summary.internship.started %}
+      <span class="small">Internship milestone tracker</span>
+      <strong>{{ summary.internship.percent }}% complete</strong>
+      <div class="progress" role="progressbar" aria-valuenow="{{ summary.internship.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ summary.internship.percent }}%"></span></div>
+      <span class="small">{{ summary.internship.days_left }} day{{ summary.internship.days_left|pluralize }} remaining · ends {{ onboarding.end_date|date:"j M Y" }}</span>
+    {% else %}
+      <span class="small">Your internship starts in</span>
+      <strong>{{ summary.internship.days_to_start }} day{{ summary.internship.days_to_start|pluralize }}</strong>
+      <span class="small">{{ onboarding.start_date|date:"j M Y" }} – {{ onboarding.end_date|date:"j M Y" }}</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<!-- Interactive Quick Actions Bar -->
+<div class="quick-actions" aria-label="Quick actions">
+  <a class="action-card" href="{% url 'peoplehub:leave-create' %}">
+    <span class="action-icon">{% include "tvg_peoplehub/_icon.html" with name="calendar" %}</span>
+    <div>
+      <span class="action-title">Request leave</span>
+      <span class="action-sub">Book time off or vacation</span>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'reporting:home' %}">
+    <span class="action-icon">{% include "tvg_peoplehub/_icon.html" with name="file" %}</span>
+    <div>
+      <span class="action-title">Weekly reports</span>
+      <span class="action-sub">Submit status &amp; deck</span>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'peoplehub:request-create' %}">
+    <span class="action-icon">{% include "tvg_peoplehub/_icon.html" with name="plus" %}</span>
+    <div>
+      <span class="action-title">New request</span>
+      <span class="action-sub">IT, HR or office support</span>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'peoplehub:directory' %}">
+    <span class="action-icon">{% include "tvg_peoplehub/_icon.html" with name="users" %}</span>
+    <div>
+      <span class="action-title">Directory</span>
+      <span class="action-sub">Find team emails &amp; roles</span>
+    </div>
+  </a>
 </div>
+
+<!-- Key Performance Indicators / Stat Cards -->
+<div class="stats">
+  <a class="stat" href="#leave">
+    <span class="stat-icon blue">{% include "tvg_peoplehub/_icon.html" with name="calendar" %}</span>
+    <div>
+      <span class="stat-value">{{ summary.leave_available|floatformat:"-1" }}</span>
+      <span class="stat-label">Leave days available</span>
+    </div>
+  </a>
+  <a class="stat" href="#requests">
+    <span class="stat-icon purple">{% include "tvg_peoplehub/_icon.html" with name="inbox" %}</span>
+    <div>
+      <span class="stat-value">{{ summary.open_requests }}</span>
+      <span class="stat-label">Open requests</span>
+    </div>
+  </a>
+  <a class="stat" href="#tasks">
+    <span class="stat-icon green">{% include "tvg_peoplehub/_icon.html" with name="check" %}</span>
+    <div>
+      <span class="stat-value">{{ summary.open_tasks }}</span>
+      <span class="stat-label">Assigned tasks</span>
+    </div>
+  </a>
+  <a class="stat" href="#learning">
+    <span class="stat-icon amber">{% include "tvg_peoplehub/_icon.html" with name="book" %}</span>
+    <div>
+      <span class="stat-value">{{ summary.learning_open }}</span>
+      <span class="stat-label">Courses in progress{% if summary.learning_overdue %} · <span style="color:var(--red);font-weight:700">{{ summary.learning_overdue }} overdue</span>{% endif %}</span>
+    </div>
+  </a>
+</div>
+
+{% if portal_roles.supervisor and training_notifications %}
+<div class="notice notice-warning" role="status" style="margin-bottom:1.5rem">
+  {% include "tvg_peoplehub/_icon.html" with name="alert" %}
+  <div><strong>Overdue mandatory training in your team</strong>
+    <ul class="plain small" style="margin-top:.4rem">{% for item in training_notifications %}<li>{{ item.enrollment.assignment.employee.get_full_name }}: {{ item.enrollment.programme_course.course.title }} — due {{ item.enrollment.due_date }}</li>{% endfor %}</ul>
+  </div>
+</div>
+{% endif %}
+
+<!-- Interactive Filter Tabs & Search Bar -->
+<div class="dash-toolbar">
+  <div class="dash-tabs" role="tablist" aria-label="Dashboard views">
+    <button type="button" class="dash-tab-btn active" data-tab-target="all">All overview</button>
+    <button type="button" class="dash-tab-btn" data-tab-target="work">Tasks &amp; Reports</button>
+    <button type="button" class="dash-tab-btn" data-tab-target="leave">Leave &amp; Requests</button>
+    <button type="button" class="dash-tab-btn" data-tab-target="organization">Venture &amp; Policies</button>
+  </div>
+  <div class="dash-search-wrap">
+    {% include "tvg_peoplehub/_icon.html" with name="search" %}
+    <input type="search" class="dash-search-input" placeholder="Search tasks, reports, policies..." data-dash-search autocomplete="off">
+  </div>
+</div>
+
+<!-- Main 2-Column Dashboard Grid -->
+<div class="dash-grid">
+  <!-- Left Column: Work & Deliverables -->
+  <div>
+    <!-- Weekly Reports & Presentations -->
+    <section class="card" id="reporting-section" data-tab-section="work all" aria-labelledby="reporting-title">
+      <div class="card-head">
+        <h2 id="reporting-title">{% include "tvg_peoplehub/_icon.html" with name="file" %}Weekly reports &amp; monthly presentations</h2>
+        <a href="{% url 'reporting:home' %}">Open reporting portal →</a>
+      </div>
+      {% if summary.next_report %}
+      <div class="notice-highlight">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <span class="small muted" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700">Upcoming deliverable</span>
+            <div style="font-weight:700;font-size:1.05rem;color:var(--navy);margin-top:.15rem">{{ summary.next_report.title }}</div>
+            <div class="small muted">Due on {{ summary.next_report.due_date|date:"l, j F Y" }}</div>
+          </div>
+          <a class="button button-quiet small" href="{% url 'reporting:home' %}">Submit report</a>
+        </div>
+      </div>
+      {% endif %}
+      <ul class="list">
+        {% for item in reporting %}
+        <li data-searchable><span class="list-main"><span class="list-title">{{ item.title }}</span><span class="list-sub">{{ item.get_kind_display }}{% if item.due_date %} · due {{ item.due_date|date:"j M Y" }}{% endif %}</span></span><span class="pill pill-{{ item.status }}">{{ item.get_status_display }}</span></li>
+        {% empty %}<li><span class="empty">No reporting assignments active.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Tasks & First Week Checklist -->
+    <section class="card" id="tasks" data-tab-section="work all" aria-labelledby="tasks-title">
+      <div class="card-head">
+        <h2 id="tasks-title">{% include "tvg_peoplehub/_icon.html" with name="check" %}Project and onboarding tasks</h2>
+      </div>
+      <ul class="list">
+        {% for item in tasks %}
+        <li data-searchable><span class="list-main"><span class="list-title">{{ item.title }}</span>{% if item.end_date %}<span class="list-sub">Due {{ item.end_date|date:"j M Y" }}</span>{% endif %}</span><span class="pill pill-{{ item.status }}">{{ item.get_status_display }}</span></li>
+        {% empty %}<li><span class="empty">No tasks assigned.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Learning & Moodle -->
+    <section class="card" id="learning" data-tab-section="work all" aria-labelledby="learning-title">
+      <div class="card-head">
+        <h2 id="learning-title">{% include "tvg_peoplehub/_icon.html" with name="book" %}Training, Moodle and skills</h2>
+      </div>
+      <ul class="list">
+        {% for item in learning %}
+        <li data-searchable style="display:block">
+          <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:center">
+            <span class="list-main"><span class="list-title">{% if item.launch_url %}<a href="{{ item.launch_url }}" rel="noopener noreferrer" target="_blank">{{ item.title }} ↗</a>{% else %}{{ item.title }}{% endif %}</span><span class="list-sub">{{ item.get_kind_display }}{% if item.due_date %} · due {{ item.due_date|date:"j M Y" }}{% endif %}</span></span>
+            {% if item.status != "completed" and item.due_date and item.due_date < today %}<span class="pill pill-overdue">Overdue</span>{% else %}<span class="pill pill-{{ item.status }}">{{ item.get_status_display }}</span>{% endif %}
+          </div>
+          <div class="progress" role="progressbar" aria-label="{{ item.title }} progress" aria-valuenow="{{ item.progress_percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ item.progress_percent }}%"></span></div>
+          <span class="list-sub">{{ item.progress_percent }}% complete</span>
+        </li>
+        {% empty %}<li><span class="empty">No learning assignments assigned.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Goals & Feedback -->
+    <section class="card" id="goals-section" data-tab-section="work all" aria-labelledby="goals-title">
+      <div class="card-head"><h2 id="goals-title">{% include "tvg_peoplehub/_icon.html" with name="target" %}Goals and feedback</h2></div>
+      <h3 style="margin-top:0">Objectives</h3>
+      <ul class="list">
+        {% for item in objectives %}
+        <li data-searchable style="display:block"><span class="list-title">{{ item.objective|default:item.objective_id }}</span>
+          <div class="progress" role="progressbar" aria-valuenow="{{ item.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"><span style="width:{{ item.progress_percentage }}%"></span></div>
+          <span class="list-sub">{{ item.progress_percentage }}% complete</span></li>
+        {% empty %}<li><span class="empty">No goals assigned yet.</span></li>{% endfor %}
+      </ul>
+      <h3>Feedback &amp; reviews</h3>
+      <ul class="list">
+        {% for item in feedback %}<li data-searchable><span class="list-title">{{ item.review_cycle }}</span><span class="pill pill-{{ item.status|slugify }}">{{ item.status }}</span></li>{% empty %}<li><span class="empty">No active review cycle.</span></li>{% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <!-- Right Column: Account, Leave, Policies & Assets -->
+  <div>
+    <!-- My Profile & Assigned Venture -->
+    <section class="card" id="about-section" data-tab-section="organization all" aria-labelledby="about-title">
+      <div class="card-head">
+        <h2 id="about-title">{% include "tvg_peoplehub/_icon.html" with name="user" %}Account &amp; Venture</h2>
+        <a href="{% url 'peoplehub:my-profile' %}">Personal profile →</a>
+      </div>
+      <dl class="facts">
+        <dt>Employee name</dt><dd>{{ portal_employee.get_full_name }}</dd>
+        <dt>Company email</dt><dd>{{ portal_employee.employee_work_info.email|default:"Not provisioned" }}</dd>
+        <dt>Staff ID</dt><dd>{% if onboarding %}{{ onboarding.intern_id }} / {{ onboarding.employee_badge_id }}{% else %}{{ portal_employee.badge_id|default:"Not assigned" }}{% endif %}</dd>
+        <dt>Venture</dt><dd><span class="pill" style="background:var(--blue-soft);color:var(--navy);font-weight:700">{{ venture.name|default:"THEVIPGROUP Sp. z o.o." }}</span></dd>
+        <dt>Department</dt><dd>{{ portal_employee.employee_work_info.department_id|default:"Not assigned" }}</dd>
+        <dt>Supervisor</dt><dd>{{ portal_employee.employee_work_info.reporting_manager_id|default:"Not assigned" }}</dd>
+        <dt>Work model</dt><dd>{{ portal_employee.employee_work_info.work_type_id|default:"Standard" }}{% if portal_employee.employee_work_info.location %} · {{ portal_employee.employee_work_info.location }}{% endif %}</dd>
+        {% if onboarding %}<dt>Internship</dt><dd>{{ onboarding.start_date|date:"j M Y" }} – {{ onboarding.end_date|date:"j M Y" }}</dd>
+        {% elif portal_employee.employee_work_info.date_joining or portal_employee.employee_work_info.contract_end_date %}<dt>Contract</dt><dd>{{ portal_employee.employee_work_info.date_joining|date:"j M Y"|default:"Not assigned" }} – {{ portal_employee.employee_work_info.contract_end_date|date:"j M Y"|default:"Indefinite" }}</dd>{% endif %}
+      </dl>
+    </section>
+
+    <!-- Leave & Balances -->
+    <section class="card" id="leave" data-tab-section="leave all" aria-labelledby="leave-title">
+      <div class="card-head">
+        <h2 id="leave-title">{% include "tvg_peoplehub/_icon.html" with name="calendar" %}Leave balances</h2>
+        <a href="{% url 'peoplehub:leave-create' %}">Request leave →</a>
+      </div>
+      <ul class="list">
+        {% for item in leave_balances %}<li data-searchable><span class="list-title">{{ item.leave_type_id }}</span><span><strong style="color:var(--navy);font-size:1.05rem">{{ item.available_days|floatformat:"-1" }}</strong> <span class="muted small">of {{ item.total_leave_days|floatformat:"-1" }} days</span></span></li>{% empty %}<li><span class="empty">No leave balances assigned.</span></li>{% endfor %}
+      </ul>
+      <h3>Recent leave requests</h3>
+      <ul class="list">
+        {% for item in leave_requests %}<li data-searchable><span class="list-main"><span class="list-title">{{ item.leave_type_id }}</span><span class="list-sub">{{ item.start_date|date:"j M" }} – {{ item.end_date|date:"j M Y" }}</span></span><span class="pill pill-{{ item.status }}">{{ item.get_status_display }}</span></li>{% empty %}<li><span class="empty">No leave requests submitted.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- My Internal Requests (Tickets) -->
+    <section class="card" id="requests" data-tab-section="leave all" aria-labelledby="requests-title">
+      <div class="card-head">
+        <h2 id="requests-title">{% include "tvg_peoplehub/_icon.html" with name="inbox" %}My requests &amp; support</h2>
+        <a href="{% url 'peoplehub:request-create' %}">New request →</a>
+      </div>
+      <ul class="list">
+        {% for item in requests %}<li data-searchable><span class="list-title">{{ item.title }}</span><span class="pill pill-{{ item.status }}">{{ item.get_status_display }}</span></li>{% empty %}<li><span class="empty">No open requests submitted.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Assigned Hardware & Assets -->
+    <section class="card" id="assets-section" data-tab-section="organization all" aria-labelledby="assets-title">
+      <div class="card-head"><h2 id="assets-title">{% include "tvg_peoplehub/_icon.html" with name="box" %}Assigned equipment</h2></div>
+      <ul class="list">
+        {% for item in assets %}<li data-searchable><span class="list-main"><span class="list-title">{{ item.asset_id }}</span>{% if item.asset_item_id %}<span class="list-sub">{{ item.asset_item_id }}</span>{% endif %}</span>{% if item.assigned_date %}<span class="muted small">since {{ item.assigned_date|date:"j M Y" }}</span>{% endif %}</li>{% empty %}<li><span class="empty">No equipment allocations.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Recent Attendance Logs -->
+    <section class="card" id="attendance-section" data-tab-section="organization all" aria-labelledby="attendance-title">
+      <div class="card-head"><h2 id="attendance-title">{% include "tvg_peoplehub/_icon.html" with name="clock" %}Recent attendance</h2></div>
+      <ul class="list">
+        {% for item in attendance %}<li data-searchable><span class="list-title">{{ item.attendance_date|date:"D, j M Y" }}</span><span class="muted" style="font-weight:600">{{ item.attendance_worked_hour|default:"—" }} h</span></li>{% empty %}<li><span class="empty">No attendance logs recorded.</span></li>{% endfor %}
+      </ul>
+    </section>
+
+    <!-- Company Policies -->
+    <section class="card" id="policies-section" data-tab-section="organization all" aria-labelledby="policies-title">
+      <div class="card-head"><h2 id="policies-title">{% include "tvg_peoplehub/_icon.html" with name="shield" %}Company policies &amp; handbook</h2></div>
+      <ul class="list">
+        {% for item in policies %}<li data-searchable><a class="list-title" href="{% url 'peoplehub:policy-detail' item.pk %}">{% include "tvg_peoplehub/_icon.html" with name="shield" %}&nbsp;{{ item.title }}</a><span class="muted">→</span></li>{% empty %}<li><span class="empty">No assigned company policies.</span></li>{% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+
 {% endblock %}

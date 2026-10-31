@@ -22,7 +22,7 @@ class JobOpeningAdminForm(forms.ModelForm):
     survey_templates = forms.ModelMultipleChoiceField(
         queryset=SurveyTemplate._base_manager.none(),
         required=False,
-        help_text="Native Horilla survey templates shown on CareerHub.",
+        help_text="Approved recruitment survey templates shown on CareerHub.",
     )
     application_opening_date = forms.DateField()
     application_closing_date = forms.DateField()

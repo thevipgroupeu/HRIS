@@ -1,40 +1,94 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07112c">
   <title>{% block title %}PeopleHub{% endblock %} · THEVIPGROUP</title>
-  <style>
-    :root { color-scheme: light; --ink:#172033; --muted:#64748b; --line:#dbe2ea; --brand:#18385f; --soft:#f5f7fa; }
-    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:var(--soft); font:15px/1.5 system-ui,sans-serif; }
-    header { background:var(--brand); color:white; } .bar { max-width:1180px; margin:auto; padding:16px 24px; display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
-    header a { color:white; text-decoration:none; } nav { display:flex; gap:16px; flex:1; flex-wrap:wrap; } nav form { margin-left:auto; }
-    button,.button { border:0; border-radius:5px; padding:9px 14px; background:var(--brand); color:white; cursor:pointer; text-decoration:none; display:inline-block; }
-    header button { background:white; color:var(--brand); } main { max-width:1180px; margin:24px auto; padding:0 24px 40px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:18px; } .card { background:white; border:1px solid var(--line); border-radius:9px; padding:20px; }
-    h1,h2,h3 { line-height:1.2; margin-top:0; } h2 { font-size:18px; } h3 { font-size:15px; margin-top:18px; } .muted { color:var(--muted); }
-    table { border-collapse:collapse; width:100%; background:white; } th,td { border-bottom:1px solid var(--line); padding:10px; text-align:left; vertical-align:top; } th { background:#eef2f6; }
-    ul { padding-left:20px; } label { display:block; font-weight:600; margin-top:12px; } input,select,textarea { width:100%; max-width:620px; padding:9px; border:1px solid #aab7c5; border-radius:4px; } .errorlist { color:#a11212; }
-  </style>
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicons/favicon-16x16.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicons/apple-touch-icon.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'tvg_peoplehub/peoplehub.css' %}">
 </head>
 <body>
-{% if user.is_authenticated %}
-<header><div class="bar">
-  <strong><a href="{% url 'peoplehub:dashboard' %}">PeopleHub</a></strong>
-  <nav aria-label="PeopleHub navigation">
-    <a href="{% url 'peoplehub:dashboard' %}">My dashboard</a>
-    <a href="{% url 'peoplehub:directory' %}">Directory</a>
-    <a href="{% url 'peoplehub:request-create' %}">New request</a>
-    <a href="{% url 'reporting:home' %}">Reporting</a>
-    <a href="{% url 'completion:home' %}">Completion</a>
-    {% if portal_roles.supervisor or portal_roles.hr or portal_roles.management %}<a href="{% url 'peoplehub:team' %}">My team</a>{% endif %}
-    {% if reporting_permissions.review %}<a href="{% url 'reporting:review-queue' %}">Reviews</a>{% endif %}
-    {% if reporting_permissions.management %}<a href="{% url 'reporting:management' %}">Reporting status</a>{% endif %}
-    {% if portal_roles.it_administrator %}<a href="{% url 'peoplehub:request-queue' %}">Request queue</a>{% endif %}
-  </nav>
-  <form method="post" action="{% url 'peoplehub:logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
-</div></header>
+{% if user.is_authenticated and portal_employee %}
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div class="ph-shell">
+  <aside class="ph-sidebar" id="ph-sidebar" aria-label="PeopleHub navigation">
+    <a class="ph-brand" href="{% url 'peoplehub:dashboard' %}">
+      <img src="{% static 'horilla_theme/assets/img/branding/thevipgroup-logo.png' %}" alt="THEVIPGROUP" width="48" height="34">
+      <div class="ph-brand-text">
+        <span class="ph-brand-title">THEVIPGROUP</span>
+        <span class="ph-brand-subtitle">PeopleHub <span>Workspace</span></span>
+      </div>
+    </a>
+    <div class="brand-lines sidebar-brand-lines">
+      <i></i><i></i><i></i>
+    </div>
+    <nav class="ph-nav" aria-label="PeopleHub main navigation">
+      <div class="ph-nav-group">
+        <div class="ph-nav-label">My Workspace</div>
+        <a href="{% url 'peoplehub:dashboard' %}"{% if nav_active == "dashboard" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="home" %}Dashboard</a>
+        <a href="{% url 'peoplehub:my-profile' %}"{% if nav_active == "profile" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="user" %}My profile</a>
+        <a href="{% url 'peoplehub:leave-create' %}"{% if nav_active == "leave" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="calendar" %}Request leave</a>
+        <a href="{% url 'peoplehub:request-create' %}"{% if nav_active == "requests" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="inbox" %}New request</a>
+      </div>
+      <div class="ph-nav-group">
+        <div class="ph-nav-label">Work &amp; Deliverables</div>
+        <a href="{% url 'reporting:home' %}"{% if nav_active == "reporting" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="file" %}Reports &amp; presentations</a>
+        <a href="{% url 'completion:home' %}"{% if nav_active == "completion" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="flag" %}Completion</a>
+        <a href="{% url 'peoplehub:directory' %}"{% if nav_active == "directory" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="users" %}Company directory</a>
+      </div>
+      {% if portal_roles.supervisor or portal_roles.hr or portal_roles.management or reporting_permissions.review or reporting_permissions.management or portal_roles.it_administrator %}
+      <div class="ph-nav-group">
+        <div class="ph-nav-label">Management</div>
+        {% if portal_roles.supervisor or portal_roles.hr or portal_roles.management %}<a href="{% url 'peoplehub:team' %}"{% if nav_active == "team" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="users" %}My team</a>{% endif %}
+        {% if reporting_permissions.review %}<a href="{% url 'reporting:review-queue' %}"{% if nav_active == "reviews" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="check" %}Reviews</a>{% endif %}
+        {% if reporting_permissions.management %}<a href="{% url 'reporting:management' %}"{% if nav_active == "reporting-status" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="chart" %}Reporting status</a>{% endif %}
+        {% if portal_roles.it_administrator %}<a href="{% url 'peoplehub:request-queue' %}"{% if nav_active == "queue" %} aria-current="page"{% endif %}>{% include "tvg_peoplehub/_icon.html" with name="list" %}Request queue</a>{% endif %}
+      </div>
+      {% endif %}
+    </nav>
+    <div class="ph-user">
+      <div class="ph-user-row">
+        <span class="avatar" aria-hidden="true">{{ portal_initials }}</span>
+        <div style="min-width:0;flex:1">
+          <div class="ph-user-name">{{ portal_employee.get_full_name }}</div>
+          <div class="ph-user-meta">{{ portal_employee.employee_work_info.job_position_id|default:"THEVIPGROUP" }}</div>
+        </div>
+      </div>
+      <div class="ph-user-actions">
+        <a class="button button-ghost" href="{% url 'change-password' %}">{% include "tvg_peoplehub/_icon.html" with name="key" %}Password</a>
+        <form method="post" action="{% url 'peoplehub:logout' %}" style="flex:1;display:flex">{% csrf_token %}<button type="submit" class="button-ghost" style="flex:1">{% include "tvg_peoplehub/_icon.html" with name="logout" %}Sign out</button></form>
+      </div>
+    </div>
+  </aside>
+  <div class="ph-backdrop" data-nav-backdrop hidden></div>
+  <div class="ph-main">
+    <header class="ph-topbar">
+      <div class="topbar-left">
+        <button type="button" class="menu-toggle" data-nav-toggle aria-controls="ph-sidebar" aria-expanded="false">{% include "tvg_peoplehub/_icon.html" with name="menu" %}<span class="sr-only">Open menu</span></button>
+        <div class="topbar-brand">
+          <img src="{% static 'horilla_theme/assets/img/branding/thevipgroup-logo.png' %}" alt="" width="36" height="26">
+          <strong>PeopleHub</strong>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-clock-pill">
+          <span class="pulse-dot"></span>
+          <span data-live-clock>Warsaw Time</span>
+        </div>
+      </div>
+    </header>
+    <main id="main-content" class="ph-content" tabindex="-1">{% block content %}{% endblock %}</main>
+  </div>
+</div>
+<script src="{% static 'tvg_peoplehub/peoplehub.js' %}" defer></script>
+{% else %}
+<main id="main-content" class="auth">{% block auth_content %}{% endblock %}</main>
 {% endif %}
-<main>{% block content %}{% endblock %}</main>
 </body>
 </html>

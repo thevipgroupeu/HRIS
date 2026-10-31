@@ -72,12 +72,12 @@
                     {% if hq_company.icon %}
                         <img src="{{ hq_company.icon.url }}" alt="" class="w-full h-full object-cover">
                     {% else %}
-                        <span>{{ hq_company.company|default:"Horilla"|first|upper }}</span>
+                        <span>{{ hq_company.company|default:"THEVIPGROUP"|first|upper }}</span>
                     {% endif %}
                 </div>
                 <div>
                     <h1 class="text-xl font-bold leading-tight">
-                        {{ hq_company.company|default:"Horilla" }} {% trans "Careers" %}
+                        {{ hq_company.company|default:"THEVIPGROUP" }} {% trans "Careers" %}
                     </h1>
                     <p class="text-sm text-dark-100 leading-tight">
                         {% trans "Open positions across our teams" %}

@@ -296,7 +296,7 @@ class DashboardTests(AnalyticsViewTestCase):
             url = reverse("standard-report-detail", args=[slug])
             self.assertIn(url, links)
             self.assertContains(response, url)
-        self.assertContains(response, "PeopleOps executive summary (Horilla report)")
+        self.assertContains(response, "PeopleOps executive summary (PeopleOps report)")
         funnel = reverse("standard-report-detail", args=["recruitment-funnel"])
         self.assertNotIn(funnel, links)
 

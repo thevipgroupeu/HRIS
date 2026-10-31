@@ -235,6 +235,20 @@ class CareerHubPublicSiteTests(SimpleTestCase):
         self.assertIn("@media (min-width: 72rem)", stylesheet)
         self.assertIn("@media (prefers-reduced-motion: reduce)", stylesheet)
 
+    def test_thevipgroup_brand_is_used_on_public_pages(self):
+        fake = FakeJobClient()
+        with patch("tvg_careers.public_views.get_public_job_client", return_value=fake):
+            response = self.client.get("/privacy/")
+
+        self.assertContains(response, "THEVIPGROUP CareerHub")
+        self.assertContains(
+            response,
+            "/static/careerhub/branding/thevipgroup-logo.png",
+            html=False,
+        )
+        self.assertNotContains(response, "Horilla administration")
+        self.assertNotContains(response, "Horilla recruitment records")
+
     def test_candidate_placeholder_is_noindex_and_collects_no_credentials(self):
         response = self.client.get(
             "/candidate/sign-in/",

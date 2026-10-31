@@ -1,10 +1,40 @@
 {% extends "tvg_peoplehub/base.html" %}
+{% load static %}
 {% block title %}Sign in{% endblock %}
-{% block content %}
-<div class="card" style="max-width:480px;margin:8vh auto">
-  <h1>PeopleHub sign in</h1>
-  <p class="muted">For THEVIPGROUP employees and interns. Use the employee account provided by HR or IT.</p>
-  <p>There is no public signup for PeopleHub. Contact HR or IT if you need an account or help signing in.</p>
-  <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Sign in</button>{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}</form>
+{% block auth_content %}
+<div class="auth-card">
+  <div class="auth-brand">
+    <div>
+      <span class="logo-chip"><img src="{% static 'horilla_theme/assets/img/branding/thevipgroup-logo.png' %}" alt="THEVIPGROUP" width="73" height="52"></span>
+      <div class="brand-lines" style="margin-top:1.5rem">
+        <i></i><i></i><i></i>
+      </div>
+    </div>
+    <div>
+      <h2>THEVIPGROUP PeopleHub</h2>
+      <p style="opacity:.92;font-size:1rem;margin-top:.35rem">Enterprise workspace for employees, interns, and management.</p>
+      <ul>
+        <li>{% include "tvg_peoplehub/_icon.html" with name="calendar" %}Track leave balances &amp; schedule time off</li>
+        <li>{% include "tvg_peoplehub/_icon.html" with name="file" %}Submit weekly status reports &amp; presentations</li>
+        <li>{% include "tvg_peoplehub/_icon.html" with name="book" %}Access skills training, Moodle &amp; career goals</li>
+        <li>{% include "tvg_peoplehub/_icon.html" with name="users" %}Connect with team members across ventures</li>
+      </ul>
+    </div>
+    <div class="small" style="opacity:.75">
+      THEVIPGROUP Sp. z o.o. · Warsaw, Poland
+    </div>
+  </div>
+  <div class="auth-form">
+    <div class="eyebrow" style="color:var(--blue-bright);font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.35rem">Internal Portal</div>
+    <h1>Sign in</h1>
+    <p class="muted" style="margin-bottom:1.5rem">Enter the credentials provided by THEVIPGROUP HR or IT.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "tvg_peoplehub/_form_fields.html" %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <button type="submit">Sign in to PeopleHub</button>
+    </form>
+    <p class="muted small" style="margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid var(--line)">PeopleHub is a restricted workspace. If you need account assistance or password reset, contact IT support or your supervisor.</p>
+  </div>
 </div>
 {% endblock %}

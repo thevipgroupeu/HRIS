@@ -138,15 +138,15 @@ USER appuser
 ARG VERSION=dev
 ARG VCS_REF=unknown
 ARG BUILD_DATE=unknown
-LABEL org.opencontainers.image.title="Horilla HR" \
-      org.opencontainers.image.description="Free and open source HR software" \
+LABEL org.opencontainers.image.title="THEVIPGROUP PeopleOps" \
+      org.opencontainers.image.description="THEVIPGROUP recruitment, internship and people operations platform" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.source="https://github.com/horilla/horilla-hr" \
-      org.opencontainers.image.url="https://www.horilla.com" \
-      org.opencontainers.image.documentation="https://docs.horilla.com" \
-      org.opencontainers.image.vendor="Horilla" \
+      org.opencontainers.image.source="https://github.com/thevipgroupeu/HRIS" \
+      org.opencontainers.image.url="https://thevipgroup.eu" \
+      org.opencontainers.image.documentation="https://github.com/thevipgroupeu/HRIS/tree/2.0/docs" \
+      org.opencontainers.image.vendor="THEVIPGROUP" \
       org.opencontainers.image.licenses="LGPL-2.1"
 
 EXPOSE 8000

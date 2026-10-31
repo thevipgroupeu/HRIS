@@ -26,7 +26,7 @@ class WhatsappCredientials(HorillaModel):
         verbose_name=_("App Secret"),
         help_text=_(
             "Meta app secret, used to verify the X-Hub-Signature-256 header on "
-            "incoming webhook calls. Without it Horilla cannot tell a real "
+            "incoming webhook calls. Without it PeopleOps cannot tell a real "
             "delivery from a forged one, so unsigned payloads are rejected. "
             "Find it under App Settings > Basic in the Meta developer console."
         ),

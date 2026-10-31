@@ -1,3 +1,22 @@
 {% extends "tvg_peoplehub/base.html" %}
 {% block title %}{{ member.name }}{% endblock %}
-{% block content %}<div class="card"><h1>{{ member.name }}</h1><p><strong>Company email:</strong> {{ member.company_email }}</p><p><strong>Position:</strong> {{ member.position }}</p><p><strong>Department:</strong> {{ member.department }}</p><p><strong>Venture:</strong> {{ member.venture|default:"Not assigned" }}</p><p><strong>Manager:</strong> {{ member.manager|default:"Not assigned" }}</p><p><strong>Work location:</strong> {{ member.work_location }}</p></div>{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'peoplehub:team' %}">{% include "tvg_peoplehub/_icon.html" with name="arrow-left" %}Back to my team</a>
+<div class="narrow">
+  <div class="profile-head">
+    <span class="avatar avatar-lg" aria-hidden="true">{{ member.name|slice:":1"|upper }}</span>
+    <div><h1>{{ member.name }}</h1><p class="muted" style="margin:0">{{ member.position|default:"Position not assigned" }}</p></div>
+  </div>
+  <section class="card" aria-labelledby="work-title">
+    <div class="card-head"><h2 id="work-title">Work details</h2></div>
+    <dl class="facts">
+      <dt>Company email</dt><dd>{% if member.company_email %}<a href="mailto:{{ member.company_email }}">{{ member.company_email }}</a>{% else %}—{% endif %}</dd>
+      <dt>Position</dt><dd>{{ member.position|default:"—" }}</dd>
+      <dt>Department</dt><dd>{{ member.department|default:"—" }}</dd>
+      <dt>Venture</dt><dd>{{ member.venture|default:"Not assigned" }}</dd>
+      <dt>Manager</dt><dd>{{ member.manager|default:"Not assigned" }}</dd>
+      <dt>Work location</dt><dd>{{ member.work_location|default:"—" }}</dd>
+    </dl>
+  </section>
+</div>
+{% endblock %}

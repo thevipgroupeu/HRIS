@@ -98,7 +98,7 @@ def queue_export_email(
                 )
                 return
 
-            subject = _("Horilla report ready: %(name)s") % {
+            subject = _("THEVIPGROUP PeopleOps report ready: %(name)s") % {
                 "name": str(definition.name)
             }
             body = _(
@@ -153,7 +153,8 @@ def _notify_failure(to_email: str, slug: str) -> None:
         definition = get_report(slug)
         name = str(definition.name) if definition else slug
         EmailMessage(
-            subject=_("Horilla report export failed: %(name)s") % {"name": name},
+            subject=_("THEVIPGROUP PeopleOps report export failed: %(name)s")
+            % {"name": name},
             body=_(
                 "Your requested export could not be generated.\n\n"
                 "Report: %(name)s\n\n"

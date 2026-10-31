@@ -1,5 +1,32 @@
 {% extends "tvg_peoplehub/base.html" %}
 {% block title %}Company directory{% endblock %}
-{% block content %}<h1>Company directory</h1><p class="muted">Only approved work-directory fields are shown.</p>
-<table><thead><tr><th>Name</th><th>Company email</th><th>Position</th><th>Department</th><th>Venture</th><th>Manager</th><th>Work location</th></tr></thead>
-<tbody>{% for row in directory_rows %}<tr><td>{{ row.name }}</td><td>{{ row.company_email }}</td><td>{{ row.position }}</td><td>{{ row.department }}</td><td>{{ row.venture }}</td><td>{{ row.manager }}</td><td>{{ row.work_location }}</td></tr>{% empty %}<tr><td colspan="7">No directory entries.</td></tr>{% endfor %}</tbody></table>{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Company directory</h1>
+    <p class="muted">Work contact details of your colleagues. Only approved work-directory fields are shown.</p>
+  </div>
+</div>
+<div class="toolbar">
+  <label class="search" for="directory-search"><span class="sr-only">Search the directory</span>{% include "tvg_peoplehub/_icon.html" with name="search" %}<input id="directory-search" type="search" placeholder="Search by name, role, department or venture" data-filter-input="#directory-rows" data-filter-count="#directory-count" autocomplete="off"></label>
+  <span class="muted small" aria-live="polite"><span id="directory-count">{{ directory_rows|length }}</span> people</span>
+</div>
+<div class="table-wrap">
+  <table class="table-responsive">
+    <thead><tr><th scope="col">Name</th><th scope="col">Company email</th><th scope="col">Position</th><th scope="col">Department</th><th scope="col">Venture</th><th scope="col">Manager</th><th scope="col">Work location</th></tr></thead>
+    <tbody id="directory-rows">
+      {% for row in directory_rows %}
+      <tr data-filter-item>
+        <td data-label="Name"><span class="cell-person"><span class="avatar" aria-hidden="true">{{ row.name|slice:":1"|upper }}</span>{{ row.name }}</span></td>
+        <td data-label="Email">{% if row.company_email %}<a href="mailto:{{ row.company_email }}">{{ row.company_email }}</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td data-label="Position">{{ row.position|default:"—" }}</td>
+        <td data-label="Department">{{ row.department|default:"—" }}</td>
+        <td data-label="Venture">{{ row.venture|default:"—" }}</td>
+        <td data-label="Manager">{{ row.manager|default:"—" }}</td>
+        <td data-label="Location">{{ row.work_location|default:"—" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="7" class="muted">No directory entries.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

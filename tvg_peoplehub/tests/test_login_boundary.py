@@ -69,7 +69,14 @@ class PeopleHubLoginBoundaryTests(TestCase):
 
     def test_login_dashboard_and_logout_with_real_csrf_checks(self):
         client = Client(enforce_csrf_checks=True, HTTP_HOST="people.thevipgroup.eu")
-        self.assertEqual(client.get("/login/").status_code, 200)
+        login_page = client.get("/login/")
+        self.assertEqual(login_page.status_code, 200)
+        self.assertContains(login_page, "THEVIPGROUP")
+        self.assertContains(
+            login_page,
+            "/static/horilla_theme/assets/img/branding/thevipgroup-logo.png",
+            html=False,
+        )
         self.assertEqual(client.post("/login/", self.credentials).status_code, 403)
         csrf = client.cookies["tvg_peoplehub_csrftoken"].value
         response = client.post(

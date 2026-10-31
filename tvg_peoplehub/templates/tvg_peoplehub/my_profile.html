@@ -1,15 +1,28 @@
 {% extends "tvg_peoplehub/base.html" %}
 {% block title %}My personal profile{% endblock %}
 {% block content %}
-<div class="card" style="max-width:720px">
-  <h1>My personal profile</h1>
-  <p class="muted">This private information is visible only in your own account and is never included in the company directory.</p>
-  <p><strong>Name:</strong> {{ profile.name }}</p>
-  <p><strong>Personal email:</strong> {{ profile.personal_email }}</p>
-  <p><strong>Phone:</strong> {{ profile.phone }}</p>
-  <p><strong>Address:</strong> {{ profile.address }}</p>
-  <p><strong>City/region:</strong> {{ profile.city }}{% if profile.state %}, {{ profile.state }}{% endif %}</p>
-  <p><strong>Country:</strong> {{ profile.country }}</p>
-  <p><strong>Postal code:</strong> {{ profile.postal_code }}</p>
+<div class="narrow">
+  <div class="profile-head">
+    <span class="avatar avatar-lg" aria-hidden="true">{{ portal_initials }}</span>
+    <div><h1>{{ profile.name }}</h1><p class="muted" style="margin:0">{{ portal_employee.employee_work_info.job_position_id|default:"" }}</p></div>
+  </div>
+  <p class="notice">{% include "tvg_peoplehub/_icon.html" with name="shield" %}<span>This private information is visible only in your own account and is never included in the company directory.</span></p>
+  <section class="card" aria-labelledby="personal-title">
+    <div class="card-head"><h2 id="personal-title">Personal details</h2></div>
+    <dl class="facts">
+      <dt>Name</dt><dd>{{ profile.name }}</dd>
+      <dt>Personal email</dt><dd>{{ profile.personal_email|default:"—" }}</dd>
+      <dt>Phone</dt><dd>{{ profile.phone|default:"—" }}</dd>
+      <dt>Address</dt><dd>{{ profile.address|default:"—" }}</dd>
+      <dt>City/region</dt><dd>{{ profile.city|default:"—" }}{% if profile.state %}, {{ profile.state }}{% endif %}</dd>
+      <dt>Country</dt><dd>{{ profile.country|default:"—" }}</dd>
+      <dt>Postal code</dt><dd>{{ profile.postal_code|default:"—" }}</dd>
+    </dl>
+  </section>
+  <section class="card" aria-labelledby="security-title">
+    <div class="card-head"><h2 id="security-title">Sign-in and security</h2></div>
+    <p class="muted">Keep your password private. You can change it at any time.</p>
+    <a class="button button-secondary" href="{% url 'change-password' %}">{% include "tvg_peoplehub/_icon.html" with name="key" %}Change password</a>
+  </section>
 </div>
 {% endblock %}

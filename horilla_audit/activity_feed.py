@@ -54,19 +54,21 @@ def history_date_label(history_date, today=None):
 
 def _actor_name(updated_by):
     if updated_by is None:
-        return _("Horilla Bot")
+        return _("THEVIPGROUP System")
     if hasattr(updated_by, "get_full_name"):
-        return updated_by.get_full_name() or str(updated_by)
-    return str(updated_by) or _("Horilla Bot")
+        name = updated_by.get_full_name() or str(updated_by)
+    else:
+        name = str(updated_by)
+    return _("THEVIPGROUP System") if name == "Horilla Bot" else name
 
 
 def _actor_avatar(updated_by):
     if updated_by is None:
-        return "https://ui-avatars.com/api/?name=Horilla+Bot&background=random"
+        return "https://ui-avatars.com/api/?name=THEVIPGROUP+System&background=random"
     getter = getattr(updated_by, "get_avatar", None)
     if callable(getter):
         return getter()
-    return "https://ui-avatars.com/api/?name=Horilla+Bot&background=random"
+    return "https://ui-avatars.com/api/?name=THEVIPGROUP+System&background=random"
 
 
 def _normalize_tracking_change(change):
@@ -160,7 +162,7 @@ class _AuditActor:
 
     def __init__(self, employee=None, name=None):
         self.employee = employee
-        self.name = name or _("Horilla Bot")
+        self.name = name or _("THEVIPGROUP System")
 
     def get_full_name(self):
         if self.employee and hasattr(self.employee, "get_full_name"):

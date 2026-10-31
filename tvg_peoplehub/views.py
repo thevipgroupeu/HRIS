@@ -6,6 +6,7 @@ from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import get_template
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from employee.models import Employee
@@ -82,18 +83,107 @@ def _base_context(request):
     }
 
 
+NAV_KEYS = {
+    ("peoplehub", "dashboard"): "dashboard",
+    ("peoplehub", "policy-detail"): "dashboard",
+    ("peoplehub", "my-profile"): "profile",
+    ("peoplehub", "directory"): "directory",
+    ("peoplehub", "leave-create"): "leave",
+    ("peoplehub", "request-create"): "requests",
+    ("peoplehub", "request-queue"): "queue",
+    ("peoplehub", "team"): "team",
+    ("peoplehub", "team-member"): "team",
+    ("reporting", "review-queue"): "reviews",
+    ("reporting", "management"): "reporting-status",
+}
+NAMESPACE_NAV_KEYS = {"reporting": "reporting", "completion": "completion"}
+
+
+def _nav_active(request):
+    match = getattr(request, "resolver_match", None)
+    if not match:
+        return ""
+    return NAV_KEYS.get(
+        (match.namespace, match.url_name), NAMESPACE_NAV_KEYS.get(match.namespace, "")
+    )
+
+
+def _initials(employee):
+    parts = [
+        getattr(employee, "employee_first_name", "") or "",
+        getattr(employee, "employee_last_name", "") or "",
+    ]
+    return "".join(part[:1] for part in parts if part).upper() or "?"
+
+
 def _render(request, template_name, context, *, status=200):
     """Render without Horilla's global admin/menu context processors."""
     context = dict(context)
     context["user"] = request.user
     context["csrf_token"] = get_token(request)
+    context["nav_active"] = _nav_active(request)
+    if context.get("portal_employee"):
+        context["portal_initials"] = _initials(context["portal_employee"])
     return HttpResponse(get_template(template_name).render(context), status=status)
+
+
+OPEN_REQUEST_STATUSES = {"new", "in_progress", "on_hold"}
+OPEN_TASK_STATUSES = {"to_do", "in_progress"}
+
+
+def _dashboard_summary(data, today):
+    """Small, derived figures for the dashboard header and tiles."""
+
+    summary = {
+        "leave_available": sum(
+            item.available_days or 0 for item in data["leave_balances"]
+        ),
+        "open_requests": sum(
+            1 for item in data["requests"] if item.status in OPEN_REQUEST_STATUSES
+        ),
+        "open_tasks": sum(
+            1 for item in data["tasks"] if item.status in OPEN_TASK_STATUSES
+        ),
+        "learning_open": 0,
+        "learning_overdue": 0,
+        "next_report": None,
+        "internship": None,
+    }
+    for item in data["learning"]:
+        if item.status != "completed":
+            summary["learning_open"] += 1
+            if item.due_date and item.due_date < today:
+                summary["learning_overdue"] += 1
+    upcoming = sorted(
+        (
+            item
+            for item in data["reporting"]
+            if item.status != "completed" and item.due_date
+        ),
+        key=lambda item: item.due_date,
+    )
+    summary["next_report"] = upcoming[0] if upcoming else None
+    onboarding = data.get("onboarding")
+    if onboarding and onboarding.start_date and onboarding.end_date:
+        total = max((onboarding.end_date - onboarding.start_date).days, 1)
+        elapsed = min(max((today - onboarding.start_date).days, 0), total)
+        summary["internship"] = {
+            "percent": round(elapsed * 100 / total),
+            "days_left": max((onboarding.end_date - today).days, 0),
+            "started": today >= onboarding.start_date,
+            "days_to_start": max((onboarding.start_date - today).days, 0),
+        }
+    return summary
 
 
 @login_required
 def dashboard(request):
     employee, context = _base_context(request)
-    context.update(dashboard_data(employee))
+    data = dashboard_data(employee)
+    today = timezone.localdate()
+    context.update(data)
+    context["today"] = today
+    context["summary"] = _dashboard_summary(data, today)
     return _render(request, "tvg_peoplehub/dashboard.html", context)
 
 
@@ -141,7 +231,15 @@ def leave_create(request):
         return redirect("peoplehub:dashboard")
     context["form"] = form
     return _render(
-        request, "tvg_peoplehub/form.html", context | {"title": "Request leave"}
+        request,
+        "tvg_peoplehub/form.html",
+        context
+        | {
+            "title": "Request leave",
+            "intro": "Choose the leave type and dates. Your manager is notified "
+            "and you can follow the status on your dashboard.",
+            "submit_label": "Submit leave request",
+        },
     )
 
 
@@ -157,7 +255,13 @@ def request_create(request):
     return _render(
         request,
         "tvg_peoplehub/form.html",
-        context | {"title": "Create an internal request"},
+        context
+        | {
+            "title": "Create an internal request",
+            "intro": "Ask HR, IT or operations for help. You can follow the "
+            "status under My requests on your dashboard.",
+            "submit_label": "Submit request",
+        },
     )
 
 

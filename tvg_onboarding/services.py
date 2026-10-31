@@ -583,7 +583,7 @@ def grant_onboarding_access(*, user, onboarding, profile):
         raise ValidationError("The approved access profile references a deleted group.")
     user_account = onboarding.employee.employee_user_id
     if not user_account:
-        raise ValidationError("The employee must have a Horilla user account.")
+        raise ValidationError("The employee must have an active PeopleOps account.")
     grant, created = OnboardingAccessGrant.all_objects.get_or_create(
         onboarding=onboarding,
         defaults={
@@ -624,7 +624,7 @@ def allocate_asset(*, user, onboarding, asset, asset_item=None):
     )
     if not (user.is_superuser or user.has_perm("asset.add_assetassignment")):
         raise PermissionDenied(
-            "Native Horilla asset-allocation permission is required."
+            "PeopleOps asset-allocation permission is required."
         )
     if not onboarding.employee_id:
         raise ValidationError("Create the employee record before allocating equipment.")

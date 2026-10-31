@@ -3263,11 +3263,13 @@ class PassWordResetForm(forms.Form):
     def get_branding(employee):
         """
         The name and logo the mail is sent under: the employee's company when
-        WHITE_LABELLING is on (else the headquarters company), Horilla when it
-        is off or no company has one.
+        WHITE_LABELLING is on (else the headquarters company), THEVIPGROUP when
+        it is off or no company has one.
         """
-        name = "Horilla"
-        logo_path = finders.find("images/ui/horilla-sticker-round.png")
+        name = getattr(settings, "TVG_BRAND_NAME", "THEVIPGROUP")
+        logo_path = finders.find(
+            "horilla_theme/assets/img/branding/thevipgroup-logo.png"
+        )
         if getattr(settings, "WHITE_LABELLING", False):
             company = None
             try:

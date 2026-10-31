@@ -1,3 +1,15 @@
 {% extends "tvg_peoplehub/base.html" %}
 {% block title %}Request queue{% endblock %}
-{% block content %}<h1>PeopleHub request queue</h1><table><thead><tr><th>Owner</th><th>Type</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead><tbody>{% for item in queue %}<tr><td>{{ item.employee_id }}</td><td>{{ item.ticket_type }}</td><td>{{ item.title }}</td><td>{{ item.get_priority_display }}</td><td>{{ item.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5">No requests.</td></tr>{% endfor %}</tbody></table>{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>PeopleHub request queue</h1><p class="muted">Internal requests submitted by employees of your company.</p></div></div>
+<div class="table-wrap">
+  <table class="table-responsive">
+    <thead><tr><th scope="col">Owner</th><th scope="col">Type</th><th scope="col">Title</th><th scope="col">Priority</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      {% for item in queue %}
+      <tr><td data-label="Owner">{{ item.employee_id }}</td><td data-label="Type">{{ item.ticket_type }}</td><td data-label="Title">{{ item.title }}</td><td data-label="Priority"><span class="pill pill-{{ item.priority }}">{{ item.get_priority_display }}</span></td><td data-label="Status"><span class="pill pill-{{ item.status }}">{{ item.get_status_display }}</span></td></tr>
+      {% empty %}<tr><td colspan="5" class="muted">No requests.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

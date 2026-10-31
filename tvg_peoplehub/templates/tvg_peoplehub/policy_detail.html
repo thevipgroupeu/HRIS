@@ -1,3 +1,10 @@
 {% extends "tvg_peoplehub/base.html" %}
 {% block title %}{{ policy.title }}{% endblock %}
-{% block content %}<article class="card"><h1>{{ policy.title }}</h1>{{ policy.body|linebreaks }}</article>{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'peoplehub:dashboard' %}">{% include "tvg_peoplehub/_icon.html" with name="arrow-left" %}Back to dashboard</a>
+<article class="card narrow">
+  <p class="muted small" style="margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700">Company policy</p>
+  <h1>{{ policy.title }}</h1>
+  <div style="margin-top:1rem">{{ policy.body|linebreaks }}</div>
+</article>
+{% endblock %}

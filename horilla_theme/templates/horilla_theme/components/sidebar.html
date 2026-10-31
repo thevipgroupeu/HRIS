@@ -585,11 +585,22 @@
                         </a>
                     </div>
                 {% else %}
-                    <img
-                        src="{% if request.user.employee_get.employee_work_info.company_id.icon %}{{ request.user.employee_get.employee_work_info.company_id.icon.url }}{% else %}/static/horilla_theme/assets/img/horilla-logo.png{% endif %}"
-                        alt="{% trans 'Company logo' %}"
-                        class="oh-sidebar-label w-7 h-7 rounded-full flex-shrink-0"
-                    >
+                    {% if request.user.employee_get.employee_work_info.company_id.icon %}
+                        <img
+                            src="{{ request.user.employee_get.employee_work_info.company_id.icon.url }}"
+                            alt="{% trans 'Company logo' %}"
+                            class="oh-sidebar-label w-7 h-7 rounded-full flex-shrink-0"
+                        >
+                    {% else %}
+                        <img
+                            src="{% static 'horilla_theme/assets/img/branding/thevipgroup-logo.png' %}"
+                            alt="THEVIPGROUP"
+                            width="40"
+                            height="28"
+                            class="oh-sidebar-label h-7 w-10 flex-shrink-0"
+                            style="object-fit: contain;"
+                        >
+                    {% endif %}
                     <div class="oh-sidebar__company-details oh-sidebar-label min-w-0">
                         <span
                             class="oh-sidebar__company-title truncate"
@@ -690,7 +701,7 @@
             Collapses to just the number when the sidebar is unpinned.
         {% endcomment %}
         <div class="sidebar-version px-4 pt-3 pb-6 border-t border-t-dark-50 text-[11px] leading-none text-[#999] select-text"
-             title="{% trans 'Horilla HR version' %} {{ horilla_version }}">
+             title="{% trans 'THEVIPGROUP PeopleOps version' %} {{ horilla_version }}">
             <span class="sidebar-version__label">{% trans "Version" %}</span>
             <span class="font-medium">{{ horilla_version }}</span>
         </div>

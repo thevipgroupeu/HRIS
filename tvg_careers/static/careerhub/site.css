@@ -56,7 +56,8 @@ p { margin: 0 0 1rem; }
 .site-header { position: sticky; z-index: 40; top: 0; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.96); backdrop-filter: blur(14px); }
 .header-inner { display: flex; min-height: 4.6rem; align-items: center; gap: 1rem; }
 .brand { display: inline-flex; align-items: center; gap: .48rem; text-decoration: none; white-space: nowrap; }
-.brand-mark { width: 1.7rem; height: 1.7rem; }
+.brand-mark { display: block; width: auto; height: 2rem; aspect-ratio: 480 / 342; object-fit: contain; flex-shrink: 0; }
+.brand-inverse .brand-mark { box-sizing: content-box; padding: .3rem .4rem; border-radius: .4rem; background: #fff; }
 .brand-name { color: var(--navy); font-size: .78rem; font-weight: 900; letter-spacing: -.03em; }
 .brand-product { padding-left: .5rem; border-left: 1px solid var(--line); color: var(--muted); font-size: .73rem; }
 .desktop-nav, .header-action { display: none; }

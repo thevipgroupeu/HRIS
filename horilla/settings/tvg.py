@@ -8,6 +8,15 @@ import os
 
 from .base import BASE_DIR, INSTALLED_APPS, MIDDLEWARE
 
+# Product-facing identity. Internal module names retain their upstream names so
+# updates and migrations remain compatible, but no end-user surface should use
+# the upstream product brand.
+TVG_BRAND_NAME = "THEVIPGROUP"
+TVG_PRODUCT_NAME = "THEVIPGROUP PeopleOps"
+TVG_BRAND_LOGO_STATIC_PATH = (
+    "horilla_theme/assets/img/branding/thevipgroup-logo.png"
+)
+
 # THEVIPGROUP-owned extensions are registered here, after upstream Horilla
 # apps, so the fork can continue to merge upstream settings with minimal
 # conflicts. Keep dependency order: careers references the core identity and

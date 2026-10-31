@@ -761,7 +761,7 @@ METRICS = {
             "asset",
             "period",
             "Asset assignments to intern employees made in the period, including "
-            "assignments made in the native Horilla asset screens.",
+            "assignments made in the PeopleOps asset screens.",
             ("asset.assigned",),
         ),
         _m(

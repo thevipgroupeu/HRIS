@@ -777,7 +777,7 @@ class MasterDataSettings:
                 {
                     "text": _("Import Data"),
                     "description": _(
-                        "Bring employees into Horilla from a CSV or Excel file"
+                        "Bring employees into PeopleOps from a CSV or Excel file"
                     ),
                 },
                 {

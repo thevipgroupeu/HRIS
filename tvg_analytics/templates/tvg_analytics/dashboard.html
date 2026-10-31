@@ -27,7 +27,7 @@
     <nav class="tvg-tabs" aria-label="Analytics dashboards">
       <a href="{% url 'analytics:executive' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}" {% if dashboard == "executive" %}aria-current="page"{% endif %}>Executive</a>
       <a href="{% url 'analytics:recruitment' %}{% if filter_querystring %}?{{ filter_querystring }}{% endif %}" {% if dashboard == "recruitment" %}aria-current="page"{% endif %}>Recruitment</a>
-      {% for report in horilla_reports %}<a href="{{ report.url }}">{{ report.label }} (Horilla report)</a>{% endfor %}
+      {% for report in horilla_reports %}<a href="{{ report.url }}">{{ report.label }} (PeopleOps report)</a>{% endfor %}
     </nav>
   </header>
 

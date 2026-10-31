@@ -206,6 +206,7 @@ urlpatterns.append(
 
 def white_labelling_company(request):
     white_labelling = getattr(settings, "WHITE_LABELLING", False)
+    brand_name = getattr(settings, "TVG_BRAND_NAME", "THEVIPGROUP")
     if white_labelling:
         hq = Company.objects.filter(hq=True).last()
         try:
@@ -218,12 +219,12 @@ def white_labelling_company(request):
             company = hq
 
         return {
-            "white_label_company_name": company.company if company else "Horilla",
+            "white_label_company_name": company.company if company else brand_name,
             "white_label_company": company,
         }
     else:
         return {
-            "white_label_company_name": "Horilla",
+            "white_label_company_name": brand_name,
             "white_label_company": None,
         }
 

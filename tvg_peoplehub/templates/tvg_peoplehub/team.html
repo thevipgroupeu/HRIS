@@ -1,3 +1,20 @@
 {% extends "tvg_peoplehub/base.html" %}
 {% block title %}My team{% endblock %}
-{% block content %}<h1>My team</h1><table><thead><tr><th>Name</th><th>Company email</th><th>Department</th><th>Position</th></tr></thead><tbody>{% for item in team_members %}<tr><td><a href="{% url 'peoplehub:team-member' item.pk %}">{{ item.get_full_name }}</a></td><td>{{ item.employee_work_info.email }}</td><td>{{ item.employee_work_info.department_id }}</td><td>{{ item.employee_work_info.job_position_id }}</td></tr>{% empty %}<tr><td colspan="4">No team members in scope.</td></tr>{% endfor %}</tbody></table>{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My team</h1><p class="muted">People you supervise or support.</p></div></div>
+{% if team_members %}
+<div class="toolbar">
+  <label class="search" for="team-search"><span class="sr-only">Search your team</span>{% include "tvg_peoplehub/_icon.html" with name="search" %}<input id="team-search" type="search" placeholder="Search your team" data-filter-input="#team-cards" data-filter-count="#team-count" autocomplete="off"></label>
+  <span class="muted small" aria-live="polite"><span id="team-count">{{ team_members|length }}</span> people</span>
+</div>
+{% endif %}
+<div class="people" id="team-cards">
+  {% for item in team_members %}
+  <article class="card person" data-filter-item>
+    <span class="cell-person"><span class="avatar" aria-hidden="true">{{ item.employee_first_name|slice:":1"|upper }}{{ item.employee_last_name|slice:":1"|upper }}</span><a href="{% url 'peoplehub:team-member' item.pk %}">{{ item.get_full_name }}</a></span>
+    <span class="list-sub">{{ item.employee_work_info.job_position_id|default:"Position not assigned" }} · {{ item.employee_work_info.department_id|default:"No department" }}</span>
+    {% if item.employee_work_info.email %}<a class="small" href="mailto:{{ item.employee_work_info.email }}">{{ item.employee_work_info.email }}</a>{% endif %}
+  </article>
+  {% empty %}<div class="card"><span class="empty">No team members in scope.</span></div>{% endfor %}
+</div>
+{% endblock %}

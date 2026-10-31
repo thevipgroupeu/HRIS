@@ -26,7 +26,7 @@ class DisabledAuthentikProvider:
     def availability(self) -> SSOAvailability:
         return SSOAvailability(
             available=False,
-            reason="External SSO is not configured; local Horilla authentication is active.",
+            reason="External SSO is not configured; local PeopleHub authentication is active.",
         )
 
 

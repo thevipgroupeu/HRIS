@@ -54,7 +54,7 @@
                                 id="username"
                                 name="username"
                                 class="oh-input w-100"
-                                placeholder="{% trans 'e.g. adam.luis@horilla.com' %}"
+                                placeholder="{% trans 'e.g. name@thevipgroup.eu' %}"
                             >
                         </div>
                         <div class="oh-input-group">
@@ -138,15 +138,21 @@
                     {% endif %}
                 </div>
                 <div style="display: contents">
-                    <img
-                        src="{% if white_label_company.icon %}
-                        "{{white_label_company.icon.url}}"
-                        alt="{{white_label_company_name}}"
-                        style=" opacity:.90; 200px; height: 140px;"
+                    {% if white_label_company.icon %}
+                        <img
+                            src="{{ white_label_company.icon.url }}"
+                            alt="{{ white_label_company_name }}"
+                            style="opacity: .9; max-width: 200px; max-height: 140px; width: auto; height: auto; object-fit: contain;"
+                        >
                     {% else %}
-                        "{% static 'images/ui/auth-logo.png' %}" alt="{% trans 'Horilla' %}"
-                    {% endif %}"
-                    >
+                        <img
+                            src="{% static 'horilla_theme/assets/img/branding/thevipgroup-logo.png' %}"
+                            alt="THEVIPGROUP"
+                            width="140"
+                            height="100"
+                            style="width: 140px; height: auto; object-fit: contain;"
+                        >
+                    {% endif %}
                     {% if white_label_company %}
                         <p style="font-size: large; color: gray; text-align: center" class="mt-2">
                             {{ white_label_company }}
